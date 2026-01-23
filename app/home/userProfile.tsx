@@ -51,7 +51,7 @@ export default function UserProfile() {
     <div className="flex">
       <main className="">
         <div>{`사용자 이름: ${user ? user.displayName : ""}`}</div>
-        <div>{`사용자 커밋수: ${commitCount.total_count ?? 0}`}</div>
+        <div>{`사용자 커밋수: ${commitCount ? commitCount.total_count : 0}`}</div>
       </main>
     </div>
   );
