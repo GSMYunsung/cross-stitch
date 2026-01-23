@@ -15,7 +15,7 @@ export default function GithubButton() {
         signInWithPopup(auth, provider)
           .then(async (result) => {
             const credential = GithubAuthProvider.credentialFromResult(result);
-            const token = credential.accessToken;
+            const token = credential?.accessToken;
 
             if (token) {
               //httpOnly 쿠키를 설정
