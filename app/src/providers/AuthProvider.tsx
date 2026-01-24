@@ -2,20 +2,24 @@
 import { auth } from "@/app/lib/firebase";
 import { GitHubCommitSearchResponse } from "@/app/src/types/github";
 import { onAuthStateChanged, User } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext<{
   user: User | null;
   commitInfo: GitHubCommitSearchResponse | null;
+  authInfoReset: () => void;
 }>({
   user: null,
   commitInfo: null,
+  authInfoReset() {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [gitHubCommitInfo, SetGitHubCommitInfo] =
     useState<GitHubCommitSearchResponse | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -44,18 +48,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         getCommitCount();
       } else {
-        // 로그아웃 상태면 로그인 페이지로 튕겨내기 (선택사항)
-        console.log("로그인이 필요합니다.");
+        router.push("/login");
       }
     });
-    return () => unsubscribe(); // 컴포넌트 언마운트 시 리스너 해제
+    return () => unsubscribe();
   }, []);
 
+  const authInfoReset = () => {
+    setUser(null);
+    SetGitHubCommitInfo(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user: user, commitInfo: gitHubCommitInfo }}>
+    <AuthContext.Provider
+      value={{
+        user: user,
+        commitInfo: gitHubCommitInfo,
+        authInfoReset,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuthInfo = () => useContext(AuthContext);

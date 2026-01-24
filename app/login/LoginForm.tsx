@@ -31,6 +31,7 @@ export default function GithubButton() {
             }
           })
           .catch((error) => {
+            // TODO: 에러처리
             // Handle Errors here.
             const errorCode = error.code;
             const errorMessage = error.message;
