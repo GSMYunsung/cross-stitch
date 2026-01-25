@@ -1,1 +1,4 @@
-export const COMMIT_RANGE = 7;
+const COMMIT_RANGE = 7;
+const CROSSTITCH_SPEC = 20;
+
+export { COMMIT_RANGE, CROSSTITCH_SPEC };
