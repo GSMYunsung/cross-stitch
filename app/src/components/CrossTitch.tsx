@@ -2,14 +2,17 @@
 "use client";
 
 import { useState } from "react";
-import { CROSSTITCH_SPEC } from "../constant";
+import { CROSSTITCH_DEFAULT_COLOR, CROSSTITCH_SPEC } from "../constant";
 
 export default function CrossTitch() {
   const rows = Array.from({ length: CROSSTITCH_SPEC });
   const cols = Array.from({ length: CROSSTITCH_SPEC });
 
   const initialGridState = Array.from({ length: CROSSTITCH_SPEC }, () =>
-    Array.from({ length: 20 }, () => ({ color: "gray", isChecked: false })),
+    Array.from({ length: CROSSTITCH_SPEC }, () => ({
+      color: CROSSTITCH_DEFAULT_COLOR,
+      isChecked: false,
+    })),
   );
 
   const [gridState, setGridState] = useState(initialGridState);
@@ -23,7 +26,10 @@ export default function CrossTitch() {
                 ? {
                     ...col,
                     isChecked: !col.isChecked,
-                    color: col.color == "gray" ? "pink" : "gray",
+                    color:
+                      col.color == CROSSTITCH_DEFAULT_COLOR
+                        ? "pink"
+                        : CROSSTITCH_DEFAULT_COLOR,
                   }
                 : col;
             })

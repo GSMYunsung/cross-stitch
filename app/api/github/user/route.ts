@@ -6,6 +6,13 @@ export async function GET() {
   const token = cookieStore.get("github_token")?.value;
 
   try {
+    if (!token) {
+      return NextResponse.json(
+        { message: "Token not found yet" },
+        { status: 401 },
+      );
+    }
+
     const userData = await fetch(`https://api.github.com/user`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",

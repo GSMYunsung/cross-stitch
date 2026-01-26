@@ -28,10 +28,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         setUser(currentUser);
 
-        const getCommitCount = async () => {
+        const getCommitCount = async (retries = 2) => {
           try {
             const userRes = await fetch("/api/github/user");
             const userLoginInfo = await userRes.json();
+
+            if (userRes.status === 401 && retries > 0) {
+              console.log(`쿠키 대기 중... 남은 재시도 횟수: ${retries}`);
+              await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
+              return getCommitCount(retries - 1); // 재귀 호출
+            }
 
             if (!userLoginInfo.login) throw new Error("User not found");
 
