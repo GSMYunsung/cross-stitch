@@ -6,7 +6,7 @@ import { useAuthInfo } from "../providers/AuthProvider";
 
 export default function Header() {
   const { user, commitInfo, authInfoReset } = useAuthInfo();
-  const { logout } = useAuth();
+  const { githubogout } = useAuth();
   const router = useRouter();
 
   if (!user) return null;
@@ -19,7 +19,7 @@ export default function Header() {
       <button
         className="flex bg-sky-500 hover:bg-sky-700 rounded-md p-2 cursor-pointer"
         onClick={() => {
-          logout().then(() => {
+          githubogout().then(() => {
             authInfoReset();
             router.push("/login");
           });
