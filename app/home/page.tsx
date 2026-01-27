@@ -1,9 +1,12 @@
-import CrossTitch from "../src/components/CrossTitch";
+import { StitchProvider } from "../src/providers/StitchProvider";
+import CrossStitchEditor from "./components/CrossStitchEditor";
 
 export default async function Page() {
   return (
-    <div className="flex flex-auto items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <CrossTitch />
-    </div>
+    <StitchProvider>
+      <div className="flex flex-auto items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+        <CrossStitchEditor />
+      </div>
+    </StitchProvider>
   );
 }

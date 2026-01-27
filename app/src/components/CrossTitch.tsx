@@ -3,8 +3,11 @@
 
 import { useState } from "react";
 import { CROSSTITCH_DEFAULT_COLOR, CROSSTITCH_SPEC } from "../constant";
+import { useStitch } from "../providers/StitchProvider";
 
 export default function CrossTitch() {
+  const { gridRef } = useStitch();
+
   const rows = Array.from({ length: CROSSTITCH_SPEC });
   const cols = Array.from({ length: CROSSTITCH_SPEC });
 
@@ -39,7 +42,10 @@ export default function CrossTitch() {
   };
 
   return (
-    <div className="flex flex-col gap-1 p-4 bg-gray-900 overflow-auto rounded-xl">
+    <div
+      ref={gridRef}
+      className="flex flex-col gap-1 p-4 bg-gray-900 overflow-auto rounded-xl"
+    >
       {rows.map((_, rowIndex) => (
         <div key={`row-${rowIndex}`} className="flex gap-1">
           {cols.map((_, colIndex) => (
