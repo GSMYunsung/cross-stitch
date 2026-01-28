@@ -1,12 +1,16 @@
 import {
   getAuth,
   GithubAuthProvider,
+  onAuthStateChanged,
   signInWithPopup,
   signOut,
+  User,
 } from "firebase/auth";
+import { useEffect, useState } from "react";
 
 export const useAuth = () => {
   const auth = getAuth();
+  const [user, setUser] = useState<User | null>(null);
 
   const githubogout = async () => {
     try {
@@ -48,5 +52,13 @@ export const useAuth = () => {
     }
   };
 
-  return { githubLogin, githubogout, user: auth.currentUser };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
+
+  return { githubLogin, githubogout, user };
 };

@@ -11,9 +11,8 @@ const exportImg = (element: HTMLElement, filename: string) => {
     .then((image) => {
       const link = window.document.createElement("a");
       link.style = "display:none;";
-      //link.download = filename + ".png";
       link.href = image;
-      const storageRef = ref(storage, `images/pattern_${Date.now()}.png`);
+      const storageRef = ref(storage, `${filename}.png`);
 
       uploadString(storageRef, image, "data_url").then((snapshot) => {
         console.log("Uploaded a base64url string!");
