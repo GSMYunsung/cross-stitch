@@ -7,15 +7,15 @@ import {
   ref,
 } from "firebase/storage";
 import { useStitch } from "../providers/StitchProvider";
-import { exportImg } from "../utils/exportImg";
+import { uploadStitchImage } from "../utils/uploadStitchImage";
 
 export const useFile = () => {
   const { gridRef } = useStitch();
   const storage = getStorage();
 
-  const handleExport = async (fileName: string) => {
+  const handleUpload = async (fileName: string) => {
     if (gridRef.current) {
-      exportImg(gridRef.current, fileName);
+      return uploadStitchImage(gridRef.current, fileName);
     }
   };
 
@@ -67,5 +67,5 @@ export const useFile = () => {
     }
   };
 
-  return { handleExport, getFileInfo, getAllFilesInfo, fileDelete, storage };
+  return { handleUpload, getFileInfo, getAllFilesInfo, fileDelete, storage };
 };
