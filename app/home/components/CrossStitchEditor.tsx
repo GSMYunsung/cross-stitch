@@ -5,6 +5,7 @@ import { useExport } from "@/app/src/hooks/useExport";
 
 // TODO: 버튼 디자인하기
 //       버튼 디자인하고 marge ㄱㄱ
+// TODO: ~내 내 커밋수까지 포함시켜서 이미지 뽑으면 이쁘징할듯
 
 export default function CrossStitchEditor() {
   const { handleExport } = useExport();
