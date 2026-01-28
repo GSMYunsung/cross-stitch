@@ -76,3 +76,12 @@ export interface ParentCommit {
   html_url: string;
   sha: string;
 }
+
+export interface StitchFileInfo {
+  name: string;
+  size: number;
+  url: string;
+  createdAt: string;
+}
+
+export type StitchFileList = StitchFileInfo[] | undefined;
