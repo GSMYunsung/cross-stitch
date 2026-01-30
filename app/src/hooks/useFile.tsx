@@ -8,6 +8,7 @@ import {
 } from "firebase/storage";
 import { useStitch } from "../providers/StitchProvider";
 import { uploadStitchImage } from "../utils/uploadStitchImage";
+import { useCallback } from "react";
 
 export const useFile = () => {
   const { gridRef } = useStitch();
@@ -31,31 +32,34 @@ export const useFile = () => {
     }
   };
 
-  const getAllFilesInfo = async (filderPath: string) => {
-    const listRef = ref(storage, filderPath);
+  // useCallback 찾아보기
+  const getAllFilesInfo = useCallback(async (path: string) => {
+    const storage = getStorage();
+    const listRef = ref(storage, path);
 
     try {
       const res = await listAll(listRef);
 
-      const filesData = await Promise.all(
+      const fileData = await Promise.all(
         res.items.map(async (itemRef) => {
           const metadata = await getMetadata(itemRef);
           const url = await getDownloadURL(itemRef);
 
           return {
-            name: metadata.name,
+            name: itemRef.name,
             size: metadata.size,
             url: url,
-            createdAt: metadata.timeCreated,
+            updatedAt: metadata.updated,
           };
         }),
       );
 
-      return filesData;
-    } catch (e) {
-      console.error(e);
+      return fileData;
+    } catch (error) {
+      console.error("파일 정보를 가져오는데 실패했습니다:", error);
+      return null;
     }
-  };
+  }, []);
 
   const fileDelete = async (filePath: string): Promise<void> => {
     const fileRef = ref(storage, filePath);

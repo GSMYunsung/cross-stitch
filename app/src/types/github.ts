@@ -81,7 +81,7 @@ export interface StitchFileInfo {
   name: string;
   size: number;
   url: string;
-  createdAt: string;
+  updatedAt: string;
 }
 
 export type StitchFileList = StitchFileInfo[] | undefined;

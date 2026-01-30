@@ -13,11 +13,13 @@ const StitchContext = createContext<{
 export function StitchProvider({ children }: { children: React.ReactNode }) {
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const initialGridState = Array.from({ length: CROSSTITCH_SPEC }, () =>
-    Array.from({ length: CROSSTITCH_SPEC }, () => ({
-      color: CROSSTITCH_DEFAULT_COLOR,
-      isChecked: false,
-    })),
+  const initialGridState: StitchCell[][] = Array.from(
+    { length: CROSSTITCH_SPEC },
+    () =>
+      Array.from({ length: CROSSTITCH_SPEC }, () => ({
+        color: CROSSTITCH_DEFAULT_COLOR,
+        isChecked: false,
+      })),
   );
 
   const [gridState, setGridState] = useState(initialGridState);
@@ -31,7 +33,12 @@ export function StitchProvider({ children }: { children: React.ReactNode }) {
   };
   return (
     <StitchContext.Provider
-      value={{ gridRef, hasCheckedItem, gridState, updateGridSate }}
+      value={{
+        gridRef,
+        hasCheckedItem,
+        gridState,
+        updateGridSate,
+      }}
     >
       {children}
     </StitchContext.Provider>

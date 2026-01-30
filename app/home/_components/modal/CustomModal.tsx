@@ -7,10 +7,11 @@ import { StitchFileInfo } from "@/app/src/types/github";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { compareWithoutExtension } from "@/app/src/utils/string";
+import { useStitch } from "@/app/src/providers/StitchProvider";
 
 interface ModalProps {
-  isOpen?: boolean;
-  onClose?: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export const CustomModal = ({ isOpen, onClose }: ModalProps) => {
@@ -20,21 +21,32 @@ export const CustomModal = ({ isOpen, onClose }: ModalProps) => {
   const [userFileData, setUserFileData] = useState<StitchFileInfo | null>(null);
 
   useEffect(() => {
-    getAllFilesInfo("images").then((fileData) => {
-      if (fileData && user) {
-        fileData.map((metaData) => {
-          if (compareWithoutExtension(metaData.name, user.uid)) {
-            setUserFileData(metaData);
+    if (isOpen && user) {
+      getAllFilesInfo("images").then((fileData) => {
+        if (fileData) {
+          const myFile = fileData.find((metaData) =>
+            compareWithoutExtension(metaData.name, user.uid),
+          );
+
+          if (myFile) {
+            setUserFileData(myFile);
           }
-        });
-      }
-    });
-  }, [getAllFilesInfo, user, userFileData]);
+        }
+      });
+    }
+  }, [getAllFilesInfo, isOpen, user]);
 
   // TODO: 링크 복사로직 추가
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={"결과 확인"}>
+    <Modal
+      isOpen={isOpen}
+      onClose={() => {
+        setUserFileData(null);
+        onClose();
+      }}
+      title={"결과 확인"}
+    >
       <div>
         {userFileData?.url ? (
           <Image
@@ -44,7 +56,10 @@ export const CustomModal = ({ isOpen, onClose }: ModalProps) => {
             height={400}
           />
         ) : (
-          <div />
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
+            <p className="mt-4 text-gray-500">이미지를 불러오는 중...</p>
+          </div>
         )}
 
         <button
