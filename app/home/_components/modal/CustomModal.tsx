@@ -31,6 +31,8 @@ export const CustomModal = ({ isOpen, onClose }: ModalProps) => {
     });
   }, [getAllFilesInfo, user, userFileData]);
 
+  // TODO: 링크 복사로직 추가
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={"결과 확인"}>
       <div>

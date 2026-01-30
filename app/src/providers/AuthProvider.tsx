@@ -39,7 +39,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               return getCommitCount(retries - 1); // 재귀 호출
             }
 
-            if (!userLoginInfo.login) throw new Error("User not found");
+            // 3번시도끝에 쿠키가 없다면 유저의 토큰이 만료되었다는뜻이므로 유저정보 리셋후 로그인화면으로 이동시킴
+            if (!userLoginInfo.login) {
+              authInfoReset();
+              router.push("/login");
+              throw new Error("User not found");
+            }
 
             const commitRes = await fetch(
               `/api/github/commits?username=${userLoginInfo.login}`,
