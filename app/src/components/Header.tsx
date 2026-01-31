@@ -17,7 +17,8 @@ export default function Header() {
       <div>{`사용자 이름: ${user ? user.displayName : ""}`}</div>
       <div>{`사용자 커밋수: ${commitInfo ? commitInfo.total_count : 0}`}</div>
       <button
-        className="flex bg-sky-500 hover:bg-sky-700 rounded-md p-2 cursor-pointer"
+        className="flex rounded-md px-8 py-2 text-white bg-indigo-600 
+      hover:bg-indigo-700 active:bg-indigo-800 transition-all cursor-pointer shadow-sm"
         onClick={() => {
           githubogout().then(() => {
             authInfoReset();
