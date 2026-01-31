@@ -19,7 +19,13 @@ export default function GithubButton() {
         e.preventDefault();
       }}
     >
-      <Image src="/github.svg" alt="GitHub Logo" width={24} height={24} />
+      <Image
+        src="/github.svg"
+        className="mr-2"
+        alt="GitHub Logo"
+        width={24}
+        height={24}
+      />
       Sign in with Github
     </button>
   );
