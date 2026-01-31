@@ -19,6 +19,7 @@ export const CustomModal = ({ isOpen, onClose }: ModalProps) => {
   const { user } = useAuth();
 
   const [userFileData, setUserFileData] = useState<StitchFileInfo | null>(null);
+  const [isImgLoading, setIsImgLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -43,31 +44,38 @@ export const CustomModal = ({ isOpen, onClose }: ModalProps) => {
       isOpen={isOpen}
       onClose={() => {
         setUserFileData(null);
+        setIsImgLoading(false);
         onClose();
       }}
       title={"결과 확인"}
     >
-      <div>
+      <div className="w-full max-w-[700px] aspect-[4/5] bg-black flex-col rounded-lg overflow-hidden flex items-center justify-center relative">
         {userFileData?.url ? (
-          <Image
-            src={`${userFileData?.url}`}
-            alt="crossStitch picture"
-            width={700}
-            height={400}
-          />
+          <div
+            className={`flex flex-col ${isImgLoading ? "visible" : "invisible"}`}
+          >
+            <Image
+              src={`${userFileData?.url}`}
+              alt="crossStitch picture"
+              onLoad={() => {
+                setIsImgLoading(true);
+              }}
+              width={700}
+              height={400}
+            />
+            <button
+              className="flex bg-sky-500 justify-self-center self-center hover:bg-sky-700 mt-8 rounded-md px-8 py-2 cursor-pointer"
+              onClick={() => {}}
+            >
+              링크 복사하기
+            </button>
+          </div>
         ) : (
           <div className="animate-pulse flex flex-col items-center">
             <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
             <p className="mt-4 text-gray-500">이미지를 불러오는 중...</p>
           </div>
         )}
-
-        <button
-          className="flex bg-sky-500 justify-self-center hover:bg-sky-700 mt-8 rounded-md px-8 py-2 cursor-pointer"
-          onClick={() => {}}
-        >
-          링크 복사하기
-        </button>
       </div>
     </Modal>
   );
