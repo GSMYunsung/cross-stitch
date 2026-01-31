@@ -3,7 +3,7 @@
 import CrossTitch from "@/app/src/components/CrossTitch";
 import { useAuth } from "@/app/src/hooks/useAuth";
 import { useFile } from "@/app/src/hooks/useFile";
-import { CustomModal } from "./modal/CustomModal";
+import { CrossStitchResultModal } from "./modal/CrossStitchResultModal";
 import { useState } from "react";
 import { useStitch } from "@/app/src/providers/StitchProvider";
 
@@ -19,7 +19,7 @@ export default function CrossStitchEditor() {
   return (
     <div className="flex flex-auto flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <CrossTitch />
-      <CustomModal
+      <CrossStitchResultModal
         isOpen={modal}
         onClose={() => {
           setModal(false);

@@ -4,4 +4,8 @@ const compareWithoutExtension = (firstString: string, secondString: string) => {
   return removeExt(firstString) === removeExt(secondString);
 };
 
-export { compareWithoutExtension };
+const generateReadmeMarkdown = (imageUrl: string): string => {
+  return `![My Cross Stitch](${imageUrl})`;
+};
+
+export { compareWithoutExtension, generateReadmeMarkdown };
