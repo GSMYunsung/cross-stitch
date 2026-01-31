@@ -1,11 +1,10 @@
-//TODO: 색 관련으로 여러 색 사용 가능하게 구현할건지?
 "use client";
 
 import { CROSSTITCH_DEFAULT_COLOR, CROSSTITCH_SPEC } from "../constant";
 import { useStitch } from "../providers/StitchProvider";
 
 export default function CrossTitch() {
-  const { gridRef, gridState, updateGridSate } = useStitch();
+  const { gridRef, gridState, selectColor, updateGridSate } = useStitch();
 
   const rows = Array.from({ length: CROSSTITCH_SPEC });
   const cols = Array.from({ length: CROSSTITCH_SPEC });
@@ -21,7 +20,7 @@ export default function CrossTitch() {
                     isChecked: !col.isChecked,
                     color:
                       col.color == CROSSTITCH_DEFAULT_COLOR
-                        ? "pink"
+                        ? selectColor
                         : CROSSTITCH_DEFAULT_COLOR,
                   }
                 : col;
