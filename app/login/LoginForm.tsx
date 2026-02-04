@@ -14,7 +14,7 @@ export default function GithubButton() {
       onClick={async (e) => {
         const isLogin = await githubLogin();
 
-        if (isLogin) router.push("/home");
+        if (isLogin) router.replace("/home");
 
         e.preventDefault();
       }}
