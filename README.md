@@ -227,22 +227,20 @@ const COMMIT_RANGE = 7;      // 최근 7일 커밋 조회
 
 ---
 
-## 작업 분담 보고서
+## 만든 사람
 
-|     구분      | 항목                | 내용                                                                 |
-| :-----------: | ------------------- | -------------------------------------------------------------------- |
-|   👤 **나**   | 서비스 기획         | 크로스스티치 픽셀 아트 + GitHub 연동 아이디어 및 전체 방향 설정      |
-|   👤 **나**   | 요구사항 정의       | 그리드 크기, 인증 방식, 이미지 저장 및 공유 흐름 결정                |
-|   👤 **나**   | Firebase 프로젝트   | Firebase 프로젝트 생성 및 Auth·Storage 설정                         |
-|   👤 **나**   | GitHub OAuth 설정   | GitHub Developer App 등록 및 Client ID/Secret 발급                  |
-|   👤 **나**   | QA 테스트           | 브라우저에서 전체 플로우 테스트 및 버그 리포트                       |
-| 🤖 **Claude** | 전체 아키텍처       | App Router 기반 폴더 구조, Provider 패턴으로 전역 상태 설계          |
-| 🤖 **Claude** | GitHub OAuth 연동   | Firebase Auth + GitHub 팝업 로그인, httpOnly 쿠키 토큰 저장 구현     |
-| 🤖 **Claude** | API Routes 구현     | `/api/github/auth/login`, `/api/github/user`, `/api/github/commits`  |
-| 🤖 **Claude** | 커밋 수 조회        | GitHub Search API 연동, 최근 7일 커밋 수 fetch 로직                 |
-| 🤖 **Claude** | 픽셀 그리드 에디터  | 20×20 셀 인터랙션 (클릭 토글, 호버 애니메이션, 색상 적용) 구현      |
-| 🤖 **Claude** | 이미지 변환 및 업로드 | `html-to-image`로 DOM → PNG 변환 후 Firebase Storage 업로드        |
-| 🤖 **Claude** | 결과 모달           | 이미지 미리보기, 마크다운 코드 생성, 클립보드 복사, Lottie 애니메이션 |
-| 🤖 **Claude** | 상태 관리           | `StitchProvider`로 그리드 상태, `AuthProvider`로 인증·커밋 상태 관리 |
-| 🤖 **Claude** | 보안 처리           | httpOnly 쿠키로 XSS 방어, 토큰 24시간 만료 설정                     |
-| 🤖 **Claude** | 리다이렉트 처리     | `/` → `/login` 서버 사이드 리다이렉트, 인증 만료 시 자동 이동       |
+| 항목                  | 내용                                                                 |
+| --------------------- | -------------------------------------------------------------------- |
+| 서비스 기획           | 크로스스티치 픽셀 아트 + GitHub 연동 아이디어 및 전체 방향 설정      |
+| 요구사항 정의         | 그리드 크기, 인증 방식, 이미지 저장 및 공유 흐름 결정                |
+| 전체 아키텍처         | App Router 기반 폴더 구조, Provider 패턴으로 전역 상태 설계          |
+| GitHub OAuth 연동     | Firebase Auth + GitHub 팝업 로그인, httpOnly 쿠키 토큰 저장 구현     |
+| API Routes 구현       | `/api/github/auth/login`, `/api/github/user`, `/api/github/commits`  |
+| 커밋 수 조회          | GitHub Search API 연동, 최근 7일 커밋 수 fetch 로직                 |
+| 픽셀 그리드 에디터    | 20×20 셀 인터랙션 (클릭 토글, 호버 애니메이션, 색상 적용) 구현      |
+| 이미지 변환 및 업로드 | `html-to-image`로 DOM → PNG 변환 후 Firebase Storage 업로드         |
+| 결과 모달             | 이미지 미리보기, 마크다운 코드 생성, 클립보드 복사, Lottie 애니메이션 |
+| 상태 관리             | `StitchProvider`로 그리드 상태, `AuthProvider`로 인증·커밋 상태 관리 |
+| 보안 처리             | httpOnly 쿠키로 XSS 방어, 토큰 24시간 만료 설정                     |
+| Firebase 설정         | Firebase 프로젝트 생성 및 Auth·Storage 설정                          |
+| GitHub OAuth 설정     | GitHub Developer App 등록 및 Client ID/Secret 발급                   |
