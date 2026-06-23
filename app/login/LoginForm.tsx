@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../src/hooks/useAuth";
-import Image from "next/image";
+
 export default function GithubButton() {
   const { githubLogin } = useAuth();
   const router = useRouter();
@@ -10,23 +11,23 @@ export default function GithubButton() {
   return (
     <button
       type="button"
-      className="text-white bg-[#0f1419] rounded-lg hover:bg-[#0f1419]/90 focus:ring-4 focus:outline-none focus:ring-[#0f1419]/50 box-border border border-transparent font-medium leading-5 rounded-base text-sm px-4 py-2.5 text-center inline-flex items-center dark:hover:bg-[#24292F] dark:focus:ring-[#24292F]/55"
+      className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100
+        active:bg-slate-200 text-[#0d0d12] font-medium text-sm rounded-xl px-4 py-3
+        transition-all cursor-pointer shadow-lg shadow-black/20"
       onClick={async (e) => {
-        const isLogin = await githubLogin();
-
-        if (isLogin) router.replace("/home");
-
         e.preventDefault();
+        const isLogin = await githubLogin();
+        if (isLogin) router.replace("/home");
       }}
     >
       <Image
         src="/github.svg"
-        className="mr-2"
         alt="GitHub Logo"
-        width={24}
-        height={24}
+        width={18}
+        height={18}
+        className="invert"
       />
-      Sign in with Github
+      GitHub으로 시작하기
     </button>
   );
 }

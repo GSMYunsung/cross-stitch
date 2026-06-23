@@ -1,64 +1,141 @@
 "use client";
-import { auth } from "@/app/lib/firebase";
+import { auth, db } from "@/app/lib/firebase";
+import {
+  initFirstLogin,
+  loadGrid,
+  SavedGridData,
+} from "@/app/src/hooks/useGridPersistence";
 import { GitHubCommitSearchResponse } from "@/app/src/types/github";
 import { onAuthStateChanged, User } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
+
+const FIRST_WEEK_BONUS = 10;
+const BONUS_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7일
+
+function calcEffectiveCommitCount(
+  commitCount: number,
+  firstLoginAt: string,
+): { effectiveCommitCount: number; isFirstWeekBonus: boolean } {
+  if (commitCount > 0) {
+    return { effectiveCommitCount: commitCount, isFirstWeekBonus: false };
+  }
+  const elapsed = Date.now() - new Date(firstLoginAt).getTime();
+  const bonusActive = elapsed < BONUS_DURATION_MS;
+  return {
+    effectiveCommitCount: bonusActive ? FIRST_WEEK_BONUS : 0,
+    isFirstWeekBonus: bonusActive,
+  };
+}
 
 const AuthContext = createContext<{
   user: User | null;
   commitInfo: GitHubCommitSearchResponse | null;
+  savedGridData: SavedGridData | null;
+  isGridLoaded: boolean;
+  effectiveCommitCount: number;
+  isFirstWeekBonus: boolean;
   authInfoReset: () => void;
 }>({
   user: null,
   commitInfo: null,
+  savedGridData: null,
+  isGridLoaded: false,
+  effectiveCommitCount: 0,
+  isFirstWeekBonus: false,
   authInfoReset() {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [gitHubCommitInfo, SetGitHubCommitInfo] =
+  const [gitHubCommitInfo, setGitHubCommitInfo] =
     useState<GitHubCommitSearchResponse | null>(null);
+  const [savedGridData, setSavedGridData] = useState<SavedGridData | null>(
+    null,
+  );
+  const [isGridLoaded, setIsGridLoaded] = useState(false);
+  const [effectiveCommitCount, setEffectiveCommitCount] = useState(0);
+  const [isFirstWeekBonus, setIsFirstWeekBonus] = useState(false);
   const router = useRouter();
+
+  const authInfoReset = () => {
+    setUser(null);
+    setGitHubCommitInfo(null);
+    setSavedGridData(null);
+    setIsGridLoaded(false);
+    setEffectiveCommitCount(0);
+    setIsFirstWeekBonus(false);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        const currentUser = auth.currentUser;
+        setUser(auth.currentUser);
 
-        setUser(currentUser);
-
-        const getCommitCount = async (retries = 2) => {
+        const initialize = async (retries = 5) => {
           try {
             const userRes = await fetch("/api/github/user");
-            const userLoginInfo = await userRes.json();
 
-            if (userRes.status === 401 && retries > 0) {
-              console.log(`쿠키 대기 중... 남은 재시도 횟수: ${retries}`);
-              await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
-              return getCommitCount(retries - 1); // 재귀 호출
+            if (userRes.status === 401) {
+              if (retries > 0) {
+                await new Promise((resolve) => setTimeout(resolve, 600));
+                return initialize(retries - 1);
+              }
+              authInfoReset();
+              router.push("/login");
+              return;
             }
 
-            // 3번시도끝에 쿠키가 없다면 유저의 토큰이 만료되었다는뜻이므로 유저정보 리셋후 로그인화면으로 이동시킴
-            // TODO: 모달창 띄워서 토큰만료안내
+            const userLoginInfo = await userRes.json();
+
             if (!userLoginInfo.login) {
               authInfoReset();
               router.push("/login");
-              throw new Error("User not found");
+              return;
             }
 
-            const commitRes = await fetch(
-              `/api/github/commits?username=${userLoginInfo.login}`,
-            );
-            const commitData = await commitRes.json();
+            const [commitRes, rawGridData] = await Promise.all([
+              fetch(`/api/github/commits?username=${userLoginInfo.login}`),
+              loadGrid(currentUser.uid),
+              setDoc(
+                doc(db, "grids", currentUser.uid),
+                { githubUsername: userLoginInfo.login },
+                { merge: true },
+              ),
+            ]);
 
-            SetGitHubCommitInfo(commitData);
+            // 최초 로그인 → firstLoginAt 기록
+            let gridData = rawGridData;
+            if (!gridData) {
+              const firstLoginAt = await initFirstLogin(currentUser.uid);
+              gridData = {
+                gridState: [],
+                commitCount: 0,
+                updatedAt: firstLoginAt,
+                firstLoginAt,
+              };
+            }
+
+            const commitData: GitHubCommitSearchResponse =
+              await commitRes.json();
+            const { effectiveCommitCount, isFirstWeekBonus } =
+              calcEffectiveCommitCount(
+                commitData.total_count,
+                gridData.firstLoginAt,
+              );
+
+            setGitHubCommitInfo(commitData);
+            setSavedGridData(gridData);
+            setEffectiveCommitCount(effectiveCommitCount);
+            setIsFirstWeekBonus(isFirstWeekBonus);
+            setIsGridLoaded(true);
           } catch (error) {
             console.error("데이터 로드 중 에러 발생:", error);
           }
         };
 
-        getCommitCount();
+        initialize();
       } else {
         router.push("/login");
       }
@@ -66,16 +143,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const authInfoReset = () => {
-    setUser(null);
-    SetGitHubCommitInfo(null);
-  };
-
   return (
     <AuthContext.Provider
       value={{
-        user: user,
+        user,
         commitInfo: gitHubCommitInfo,
+        savedGridData,
+        isGridLoaded,
+        effectiveCommitCount,
+        isFirstWeekBonus,
         authInfoReset,
       }}
     >

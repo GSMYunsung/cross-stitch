@@ -1,17 +1,16 @@
 "use client";
 
-import { Modal } from "@/app/src/components/modal";
 import { useAuth } from "@/app/src/hooks/useAuth";
 import { useFile } from "@/app/src/hooks/useFile";
 import { StitchFileInfo } from "@/app/src/types/github";
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import lottieJson from "../../../../public/check.json";
 import {
   compareWithoutExtension,
   generateReadmeMarkdown,
 } from "@/app/src/utils/string";
 import Lottie from "react-lottie-player";
+import Image from "next/image";
+import lottieJson from "../../../../public/check.json";
+import { useEffect, useState } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -23,19 +22,17 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
   const { user } = useAuth();
 
   const [userFileData, setUserFileData] = useState<StitchFileInfo | null>(null);
-  const [isImgLoading, setIsImgLoading] = useState<boolean>(false);
-  const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [isImgLoaded, setIsImgLoaded] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
       getAllFilesInfo("images").then((fileData) => {
         if (fileData) {
-          const myFile = fileData.find((metaData) =>
-            compareWithoutExtension(metaData.name, user.uid),
+          const myFile = fileData.find((m) =>
+            compareWithoutExtension(m.name, user.uid),
           );
-          if (myFile) {
-            setUserFileData(myFile);
-          }
+          if (myFile) setUserFileData(myFile);
         }
       });
     }
@@ -48,61 +45,94 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
     }
   };
 
+  const handleClose = () => {
+    setUserFileData(null);
+    setIsImgLoaded(false);
+    setIsCopied(false);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={() => {
-        setUserFileData(null);
-        setIsImgLoading(false);
-        setIsCopied(false);
-        onClose();
-      }}
-      title={"결과 확인"}
-    >
-      <div className="w-full max-w-[700px] aspect-[4/5] bg-black flex-col rounded-lg overflow-hidden flex items-center justify-center relative p-6">
-        {userFileData?.url ? (
-          <div
-            className={`flex flex-col items-center w-full ${isImgLoading ? "opacity-100" : "opacity-0"}`}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={handleClose}
+      />
+
+      <div className="relative z-10 bg-[#13131a] border border-[#1e1e2a] rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e1e2a]">
+          <h2 className="text-white font-semibold text-sm">결과 확인</h2>
+          <button
+            onClick={handleClose}
+            className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer text-lg leading-none"
           >
-            {isCopied ? (
-              <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                <Lottie
-                  loop={false}
-                  animationData={lottieJson}
-                  play
-                  style={{ width: 150, height: 150 }}
-                />
-                <p className="text-white text-lg font-bold mt-2">복사 완료!</p>
-                <p className="text-gray-400 text-sm mt-1">
-                  GitHub README에 붙여넣기 하세요.
-                </p>
-              </div>
-            ) : (
-              <>
+            ✕
+          </button>
+        </div>
+
+        {/* 콘텐츠 */}
+        <div className="p-6 flex flex-col items-center">
+          {!userFileData ? (
+            <div className="flex flex-col items-center py-12 gap-4">
+              <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-slate-500 text-sm">이미지를 불러오는 중...</p>
+            </div>
+          ) : isCopied ? (
+            <div className="flex flex-col items-center py-8 animate-in fade-in zoom-in duration-300">
+              <Lottie
+                loop={false}
+                animationData={lottieJson}
+                play
+                style={{ width: 120, height: 120 }}
+              />
+              <p className="text-white font-bold text-lg mt-2">복사 완료!</p>
+              <p className="text-slate-400 text-sm mt-1">
+                GitHub README에 붙여넣기 하세요.
+              </p>
+              <button
+                onClick={handleClose}
+                className="mt-6 px-6 py-2.5 rounded-lg border border-[#2a2a3a] text-slate-400
+                  hover:text-slate-200 hover:border-[#3a3a4a] transition-all text-sm cursor-pointer"
+              >
+                닫기
+              </button>
+            </div>
+          ) : (
+            <>
+              <div
+                className={`w-full rounded-xl overflow-hidden bg-[#0d0d12] border border-[#1e1e2a] transition-opacity duration-300 ${
+                  isImgLoaded ? "opacity-100" : "opacity-0"
+                }`}
+              >
                 <Image
-                  src={`${userFileData.url}`}
-                  alt="crossStitch picture"
-                  onLoad={() => setIsImgLoading(true)}
-                  width={700}
+                  src={userFileData.url}
+                  alt="crossStitch result"
+                  onLoad={() => setIsImgLoaded(true)}
+                  width={600}
                   height={400}
-                  className="rounded-lg object-contain"
+                  className="w-full object-contain"
                 />
-                <button
-                  className="bg-sky-500 hover:bg-sky-700 mt-8 rounded-md px-12 py-2 text-white font-medium transition-colors cursor-pointer"
-                  onClick={handleCopy}
-                >
-                  리드미 링크 복사하기
-                </button>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
-            <p className="mt-4 text-gray-500">이미지를 불러오는 중...</p>
-          </div>
-        )}
+              </div>
+              {!isImgLoaded && (
+                <div className="flex items-center justify-center py-16">
+                  <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+              <button
+                className="mt-5 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500
+                  text-white font-medium text-sm transition-all cursor-pointer
+                  shadow-lg shadow-indigo-900/30"
+                onClick={handleCopy}
+              >
+                리드미 링크 복사하기
+              </button>
+            </>
+          )}
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 };
