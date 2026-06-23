@@ -1,0 +1,15 @@
+name: Daily CrossStitch Update
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # 매일 자정 UTC (한국시간 09:00)
+  workflow_dispatch: # 수동 실행 허용
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger cron endpoint
+        run: |
+          curl -f -X POST "${{ secrets.APP_URL }}/api/cron/update" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
