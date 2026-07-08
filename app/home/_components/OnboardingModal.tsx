@@ -1,112 +1,143 @@
 "use client";
 
+import { useStitch } from "@/app/src/providers/StitchProvider";
+import { GAME_MODE, GameMode } from "@/app/src/types/crossTitch";
 import { useEffect, useState } from "react";
 
-const ONBOARDING_KEY = "crossstitch-onboarded";
+const ONBOARDING_KEY = (mode: GameMode) => `crossstitch-onboarded-${mode}`;
 
-const steps = [
-  {
-    icon: "⬛",
-    title: "커밋하면 칸이 열려요",
-    desc: "최근 7일간의 GitHub 커밋 수만큼 그리드 셀을 채울 수 있어요.",
-  },
-  {
-    icon: "🎨",
-    title: "색상을 골라 픽셀을 그려요",
-    desc: "원하는 색을 선택하고 셀을 클릭해서 나만의 십자수 아트를 만드세요.",
-  },
-  {
-    icon: "📌",
-    title: "GitHub README에 삽입해요",
-    desc: "완성 버튼을 누르면 이미지가 저장되고, 링크를 복사해 README에 바로 붙여넣을 수 있어요.",
-  },
+const challengeSteps = [
+  { label: "STEP 01", title: "커밋하면 칸이 열려요", desc: "최근 한 달간의 GitHub 커밋 수만큼 셀을 채울 수 있어요." },
+  { label: "STEP 02", title: "색상을 골라 그려요", desc: "왼쪽 컬러피커로 색을 고르고 셀을 클릭해서 픽셀 아트를 완성하세요." },
+  { label: "STEP 03", title: "README에 삽입해요", desc: "완성 → 버튼을 누르면 이미지가 저장되고, 링크를 복사해 GitHub README에 붙여넣으세요." },
+];
+
+const normalSteps = [
+  { label: "STEP 01", title: "제한 없이 채워요", desc: "커밋 수와 무관하게 원하는 만큼 셀을 채울 수 있어요. 자유롭게 창작하세요." },
+  { label: "STEP 02", title: "색상을 골라 그려요", desc: "왼쪽 컬러피커로 색을 고르고 셀을 클릭해서 픽셀 아트를 완성하세요." },
+  { label: "STEP 03", title: "README에 삽입해요", desc: "완성 → 버튼을 누르면 이미지가 저장되고, 링크를 복사해 GitHub README에 붙여넣으세요." },
 ];
 
 export default function OnboardingModal() {
+  const { mode } = useStitch();
   const [show, setShow] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (!localStorage.getItem(ONBOARDING_KEY)) {
-      setShow(true);
-    }
-  }, []);
+    if (!localStorage.getItem(ONBOARDING_KEY(mode))) setShow(true);
+  }, [mode]);
 
   const handleClose = () => {
-    localStorage.setItem(ONBOARDING_KEY, "true");
+    localStorage.setItem(ONBOARDING_KEY(mode), "true");
     setShow(false);
   };
 
   if (!show) return null;
 
+  const steps = mode === GAME_MODE.NORMAL ? normalSteps : challengeSteps;
   const isLast = step === steps.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{ background: "rgba(245,238,230,0.92)", backdropFilter: "blur(4px)" }}
+      onClick={handleClose}
+    >
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={handleClose}
-      />
-
-      <div className="relative z-10 bg-[#13131a] border border-[#1e1e2a] rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        {/* 상단 헤더 */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-indigo-400 text-lg font-bold">✦</span>
-            <span className="text-white font-semibold">CrossStitch 시작하기</span>
+        className="w-full max-w-md"
+        style={{
+          background: "#FFFFFF",
+          border: "2px solid #1A1A1A",
+          boxShadow: "6px 6px 0 #1A1A1A",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 헤더 */}
+        <div
+          className="flex items-center justify-between px-5 py-3"
+          style={{ background: "#1A1A1A", borderBottom: "2px solid #1A1A1A" }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="font-label text-[11px]" style={{ color: "#FFFFFF" }}>
+              HOW TO USE
+            </span>
+            <span
+              className="font-label text-[9px] px-2 py-0.5"
+              style={{
+                background: mode === GAME_MODE.NORMAL ? "#3B9A3B" : "#C41E3A",
+                color: "#fff",
+              }}
+            >
+              {mode === GAME_MODE.NORMAL ? "NORMAL" : "CHALLENGE"}
+            </span>
           </div>
           <button
             onClick={handleClose}
-            className="text-slate-500 hover:text-slate-300 transition-colors text-sm cursor-pointer"
+            className="font-label text-[10px] cursor-pointer"
+            style={{ color: "#888", textDecoration: "underline" }}
           >
-            건너뛰기
+            SKIP
           </button>
         </div>
 
         {/* 스텝 인디케이터 */}
-        <div className="flex gap-1.5 px-6 pt-2 pb-4">
+        <div className="flex" style={{ borderBottom: "1.5px solid #D5CFC7" }}>
           {steps.map((_, i) => (
             <div
               key={i}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === step
-                  ? "w-6 bg-indigo-400"
-                  : i < step
-                    ? "w-3 bg-indigo-600"
-                    : "w-3 bg-[#2a2a3a]"
-              }`}
+              className="flex-1 h-1"
+              style={{ background: i <= step ? "#C41E3A" : "#D5CFC7" }}
             />
           ))}
         </div>
 
         {/* 콘텐츠 */}
-        <div className="px-6 pb-6">
-          <div className="bg-[#0d0d12] rounded-xl p-6 mb-6 flex flex-col items-center text-center min-h-[160px] justify-center">
-            <span className="text-5xl mb-4">{steps[step].icon}</span>
-            <h3 className="text-white font-bold text-lg mb-2">
-              {steps[step].title}
-            </h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              {steps[step].desc}
-            </p>
-          </div>
+        <div className="p-6">
+          <span
+            className="font-label text-[9px] block mb-2"
+            style={{ color: "#C41E3A" }}
+          >
+            {steps[step].label}
+          </span>
+          <h3
+            className="font-black text-xl mb-3"
+            style={{ color: "#1A1A1A" }}
+          >
+            {steps[step].title}
+          </h3>
+          <p className="text-sm leading-relaxed" style={{ color: "#7A7A7A" }}>
+            {steps[step].desc}
+          </p>
+        </div>
 
-          <div className="flex gap-3">
-            {step > 0 && (
-              <button
-                onClick={() => setStep((s) => s - 1)}
-                className="flex-1 py-2.5 rounded-lg border border-[#2a2a3a] text-slate-400 hover:text-slate-200 hover:border-[#3a3a4a] transition-all text-sm cursor-pointer"
-              >
-                이전
-              </button>
-            )}
+        {/* 버튼 */}
+        <div
+          className="flex gap-2 px-5 pb-5"
+          style={{ borderTop: "1.5px solid #D5CFC7", paddingTop: 16 }}
+        >
+          {step > 0 && (
             <button
-              onClick={isLast ? handleClose : () => setStep((s) => s + 1)}
-              className="flex-1 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-all text-sm cursor-pointer"
+              onClick={() => setStep((s) => s - 1)}
+              className="flex-1 py-2.5 font-label text-[10px] cursor-pointer transition-all"
+              style={{ border: "1.5px solid #1A1A1A", background: "#FFFFFF", color: "#1A1A1A" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#F0E9E0"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#FFFFFF"; }}
             >
-              {isLast ? "시작하기 →" : "다음"}
+              ← 이전
             </button>
-          </div>
+          )}
+          <button
+            onClick={isLast ? handleClose : () => setStep((s) => s + 1)}
+            className="flex-1 py-2.5 font-label text-[10px] cursor-pointer transition-all"
+            style={{
+              background: "#1A1A1A",
+              color: "#FFFFFF",
+              border: "1.5px solid #1A1A1A",
+              boxShadow: "2px 2px 0 #C41E3A",
+            }}
+          >
+            {isLast ? "시작하기 →" : "다음 →"}
+          </button>
         </div>
       </div>
     </div>
