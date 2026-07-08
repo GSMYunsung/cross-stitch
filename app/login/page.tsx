@@ -1,59 +1,158 @@
 import GithubButton from "./LoginForm";
 
 const features = [
-  {
-    icon: "⬛",
-    label: "커밋 수만큼 셀을 채워 픽셀 아트를 완성하세요",
-  },
-  {
-    icon: "🎨",
-    label: "원하는 색상으로 나만의 스타일을 표현하세요",
-  },
-  {
-    icon: "📌",
-    label: "완성된 이미지를 GitHub README에 바로 삽입하세요",
-  },
+  { label: "COMMIT → CELL", desc: "커밋 수만큼 셀이 열려요" },
+  { label: "DRAW FREELY", desc: "원하는 색상으로 픽셀 아트를 그려요" },
+  { label: "README READY", desc: "완성된 이미지를 GitHub README에 삽입해요" },
 ];
 
 export default function Page() {
   return (
-    <div className="flex flex-1 items-center justify-center bg-[#0d0d12] px-4">
-      {/* 배경 그래디언트 */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#1e1b4b20_0%,_transparent_60%)] pointer-events-none" />
-
-      <div className="relative w-full max-w-sm">
-        {/* 로고 + 타이틀 */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 mb-5">
-            <span className="text-2xl">✦</span>
+    <div
+      className="flex flex-1 items-center justify-center px-4 py-12"
+      style={{ background: "#F5EEE6" }}
+    >
+      <div className="w-full max-w-[360px]">
+        {/* 로고 섹션 */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className="flex items-center justify-center w-12 h-12"
+              style={{ background: "#C41E3A", border: "2px solid #1A1A1A" }}
+            >
+              <span
+                className="text-white font-black text-xl"
+                style={{ fontFamily: "var(--font-space-mono, 'Space Mono', monospace)" }}
+              >
+                S
+              </span>
+            </div>
+            <div>
+              <div
+                className="font-black tracking-wider text-base"
+                style={{ fontFamily: "var(--font-space-mono, 'Space Mono', monospace)", color: "#1A1A1A" }}
+              >
+                STITCH.COMMIT
+              </div>
+              <div
+                className="text-[10px] tracking-widest uppercase"
+                style={{ color: "#7A7A7A", fontFamily: "var(--font-space-mono, monospace)" }}
+              >
+                Turn commits into pixel art
+              </div>
+            </div>
           </div>
-          <h1 className="text-white text-2xl font-bold tracking-tight mb-2">
-            CrossStitch
-          </h1>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            GitHub 커밋을 십자수 픽셀 아트로 바꿔보세요.
-            <br />
-            나만의 README를 꾸며보세요.
-          </p>
+
+          {/* 데코 라인 */}
+          <div style={{ borderTop: "2px solid #1A1A1A" }} />
         </div>
 
         {/* 로그인 카드 */}
-        <div className="bg-[#13131a] border border-[#1e1e2a] rounded-2xl p-6 mb-6">
-          <GithubButton />
-
-          <p className="text-center text-slate-600 text-xs mt-4">
-            GitHub 계정으로 안전하게 로그인됩니다
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "2px solid #1A1A1A",
+            boxShadow: "5px 5px 0 #1A1A1A",
+            padding: "24px",
+            marginBottom: 20,
+          }}
+        >
+          <p
+            className="font-label text-[10px] mb-4"
+            style={{ color: "#7A7A7A" }}
+          >
+            GitHub으로 로그인하여 시작하세요
           </p>
+          <GithubButton />
         </div>
 
         {/* 피처 리스트 */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-0 mb-5">
           {features.map((f, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-lg">{f.icon}</span>
-              <span className="text-slate-500 text-xs">{f.label}</span>
+            <div
+              key={i}
+              className="flex items-start gap-4 py-3"
+              style={{
+                borderBottom: i < features.length - 1 ? "1px solid #D5CFC7" : "none",
+              }}
+            >
+              <span
+                className="font-label text-[9px] flex-shrink-0 mt-0.5"
+                style={{ color: "#C41E3A", minWidth: 80 }}
+              >
+                {f.label}
+              </span>
+              <span className="text-xs" style={{ color: "#7A7A7A" }}>
+                {f.desc}
+              </span>
             </div>
           ))}
+        </div>
+
+        {/* 모드 선택 안내 */}
+        <div
+          style={{
+            border: "1.5px solid #1A1A1A",
+            background: "#FFFFFF",
+          }}
+        >
+          <div
+            className="px-4 py-2.5"
+            style={{ background: "#1A1A1A", borderBottom: "1.5px solid #1A1A1A" }}
+          >
+            <span className="font-label text-[10px]" style={{ color: "#FFFFFF" }}>
+              SELECT YOUR MODE
+            </span>
+          </div>
+
+          {/* 일반 모드 */}
+          <div
+            className="flex items-start gap-3 px-4 py-3.5"
+            style={{ borderBottom: "1px solid #D5CFC7" }}
+          >
+            <div
+              className="flex-shrink-0 w-7 h-7 flex items-center justify-center text-base"
+              style={{ border: "1.5px solid #3B9A3B", background: "#F0FAF0" }}
+            >
+              🎨
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-label text-[9px]" style={{ color: "#3B9A3B" }}>
+                  NORMAL MODE
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: "#7A7A7A" }}>
+                커밋 수에 관계없이 자유롭게 채워요. 칸이 줄거나 초기화되지 않아요.
+              </p>
+            </div>
+          </div>
+
+          {/* 도전 모드 */}
+          <div className="flex items-start gap-3 px-4 py-3.5">
+            <div
+              className="flex-shrink-0 w-7 h-7 flex items-center justify-center text-base"
+              style={{ border: "1.5px solid #C41E3A", background: "#FFF5F5" }}
+            >
+              ⚔️
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-label text-[9px]" style={{ color: "#C41E3A" }}>
+                  CHALLENGE MODE
+                </span>
+                <span
+                  className="font-label text-[8px] px-1.5 py-0.5"
+                  style={{ background: "#C41E3A", color: "#fff" }}
+                >
+                  GITHUB 연동
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: "#7A7A7A" }}>
+                이번 달 커밋 수만큼 칸을 사용해요. 커밋이 줄면 십자수도 함께 줄어들어요.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
