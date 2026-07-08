@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./src/providers/AuthProvider";
 import Header from "./src/components/Header";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceMono = Space_Mono({
+  weight: ["400", "700"],
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-space-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -27,9 +24,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body
-        className={`flex ${geistSans.variable} ${geistMono.variable} antialiased flex-col min-h-screen bg-[#0d0d12] text-[#e2e8f0]`}
-      >
+      <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+        />
+        <link
+          rel="preload"
+          href="https://cdn.jsdelivr.net/gh/quiple/x12y12pxMaruMinyaHangul@main/fonts/x12y12pxMaruMinyaHangul.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
+      <body className={`flex ${spaceMono.variable} antialiased flex-col min-h-screen bg-[#F5EEE6]`}>
         <AuthProvider>
           <Header />
           <main className="flex-1 flex flex-col">{children}</main>
