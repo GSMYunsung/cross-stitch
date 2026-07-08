@@ -5,8 +5,7 @@ const compareWithoutExtension = (firstString: string, secondString: string) => {
 };
 
 const generateReadmeMarkdown = (imageUrl: string): string => {
-  return `
-  <img src=${imageUrl} width="200" height="400"/>`;
+  return `<img src=${imageUrl} width="200" height="200"/>`;
 };
 
 export { compareWithoutExtension, generateReadmeMarkdown };
