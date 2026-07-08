@@ -3,7 +3,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
 const serviceAccount = JSON.parse(
-  process.env.FIREBASE_SERVICE_ACCOUNT_KEY ?? "{}",
+  process.env.FIREBASE_SERVICE_ACCOUNT_KEY || "{}",
 );
 
 const adminApp =

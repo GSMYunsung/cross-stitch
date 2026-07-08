@@ -10,6 +10,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger cron endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl -f -X POST "${{ secrets.APP_URL }}/api/cron/update" \
-            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "APP_URL or CRON_SECRET not configured — skipping (not deployed yet)"
+            exit 0
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "$APP_URL/api/cron/update" \
+            -H "x-cron-secret: $CRON_SECRET" \
+            -H "Content-Type: application/json")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Cron endpoint returned HTTP $HTTP_CODE"
+            exit 1
+          fi
