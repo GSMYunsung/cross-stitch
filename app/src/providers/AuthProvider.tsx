@@ -6,57 +6,40 @@ import {
   SavedGridData,
 } from "@/app/src/hooks/useGridPersistence";
 import { GitHubCommitSearchResponse } from "@/app/src/types/github";
+import { GameMode } from "@/app/src/types/crossTitch";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
-
-const FIRST_WEEK_BONUS = 10;
-const BONUS_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7일
-
-function calcEffectiveCommitCount(
-  commitCount: number,
-  firstLoginAt: string,
-): { effectiveCommitCount: number; isFirstWeekBonus: boolean } {
-  if (commitCount > 0) {
-    return { effectiveCommitCount: commitCount, isFirstWeekBonus: false };
-  }
-  const elapsed = Date.now() - new Date(firstLoginAt).getTime();
-  const bonusActive = elapsed < BONUS_DURATION_MS;
-  return {
-    effectiveCommitCount: bonusActive ? FIRST_WEEK_BONUS : 0,
-    isFirstWeekBonus: bonusActive,
-  };
-}
 
 const AuthContext = createContext<{
   user: User | null;
   commitInfo: GitHubCommitSearchResponse | null;
   savedGridData: SavedGridData | null;
   isGridLoaded: boolean;
+  isNewUser: boolean;
   effectiveCommitCount: number;
-  isFirstWeekBonus: boolean;
   authInfoReset: () => void;
+  updateMode: (mode: GameMode) => void;
 }>({
   user: null,
   commitInfo: null,
   savedGridData: null,
   isGridLoaded: false,
+  isNewUser: false,
   effectiveCommitCount: 0,
-  isFirstWeekBonus: false,
   authInfoReset() {},
+  updateMode() {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [gitHubCommitInfo, setGitHubCommitInfo] =
     useState<GitHubCommitSearchResponse | null>(null);
-  const [savedGridData, setSavedGridData] = useState<SavedGridData | null>(
-    null,
-  );
+  const [savedGridData, setSavedGridData] = useState<SavedGridData | null>(null);
   const [isGridLoaded, setIsGridLoaded] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const [effectiveCommitCount, setEffectiveCommitCount] = useState(0);
-  const [isFirstWeekBonus, setIsFirstWeekBonus] = useState(false);
   const router = useRouter();
 
   const authInfoReset = () => {
@@ -65,7 +48,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSavedGridData(null);
     setIsGridLoaded(false);
     setEffectiveCommitCount(0);
-    setIsFirstWeekBonus(false);
+  };
+
+  const updateMode = (mode: GameMode) => {
+    setSavedGridData((prev) => (prev ? { ...prev, mode } : prev));
+    setEffectiveCommitCount(gitHubCommitInfo?.total_count ?? 0);
   };
 
   useEffect(() => {
@@ -105,8 +92,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               ),
             ]);
 
-            // 최초 로그인 → firstLoginAt 기록
             let gridData = rawGridData;
+            const firstLogin = !rawGridData;
             if (!gridData) {
               const firstLoginAt = await initFirstLogin(currentUser.uid);
               gridData = {
@@ -114,21 +101,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 commitCount: 0,
                 updatedAt: firstLoginAt,
                 firstLoginAt,
+                wasReset: false,
+                mode: undefined,
               };
             }
 
-            const commitData: GitHubCommitSearchResponse =
-              await commitRes.json();
-            const { effectiveCommitCount, isFirstWeekBonus } =
-              calcEffectiveCommitCount(
-                commitData.total_count,
-                gridData.firstLoginAt,
-              );
+            const commitData: GitHubCommitSearchResponse = await commitRes.json();
 
             setGitHubCommitInfo(commitData);
             setSavedGridData(gridData);
-            setEffectiveCommitCount(effectiveCommitCount);
-            setIsFirstWeekBonus(isFirstWeekBonus);
+            setIsNewUser(firstLogin);
+            setEffectiveCommitCount(commitData.total_count);
             setIsGridLoaded(true);
           } catch (error) {
             console.error("데이터 로드 중 에러 발생:", error);
@@ -150,9 +133,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         commitInfo: gitHubCommitInfo,
         savedGridData,
         isGridLoaded,
+        isNewUser,
         effectiveCommitCount,
-        isFirstWeekBonus,
         authInfoReset,
+        updateMode,
       }}
     >
       {children}
@@ -160,4 +144,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const useAuthInfo = () => useContext(AuthContext);
+export const useAuthInfo = (): React.ContextType<typeof AuthContext> =>
+  useContext(AuthContext);

@@ -1,27 +1,16 @@
 import { adminDb, adminStorage } from "@/app/lib/firebase-admin";
 import { generateGridImage, generateResetImage } from "@/app/src/utils/generateGridImage";
+import { applyRandomRemovalCells, shouldFullReset } from "@/app/src/utils/gridLogic";
 import { NextRequest, NextResponse } from "next/server";
+import { GAME_MODE } from "@/app/src/types/crossTitch";
 
-const RESET_THRESHOLD = 0.3; // 저장 시점 대비 30% 이하로 떨어지면 전체 초기화
-const RESET_MIN_COUNT = 10;  // 저장 커밋 수가 10개 이상일 때만 적용
-
-const COMMIT_RANGE = 7;
+const COMMIT_RANGE = 30;
 const GITHUB_API = "https://api.github.com";
 
 interface CheckedCell {
   r: number;
   c: number;
   color: string;
-}
-
-function applyRandomRemoval(cells: CheckedCell[], removeCount: number): CheckedCell[] {
-  if (removeCount <= 0 || cells.length === 0) return cells;
-  const shuffled = [...cells];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled.slice(removeCount);
 }
 
 async function getCommitCount(username: string): Promise<number> {
@@ -57,26 +46,27 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
+    if (data.mode !== GAME_MODE.CHALLENGE) {
+      results.push({ uid, status: "skipped: not challenge mode" });
+      continue;
+    }
+
     try {
       const currentCount = await getCommitCount(githubUsername);
       const savedCount: number = data.commitCount ?? 0;
       const diff = savedCount - currentCount;
 
       let checkedCells: CheckedCell[] = (data.checkedCells ?? []) as CheckedCell[];
-      const shouldReset =
-        savedCount >= RESET_MIN_COUNT &&
-        currentCount <= savedCount * RESET_THRESHOLD;
-
       let imageBuffer: Buffer;
       let wasReset = false;
 
-      if (shouldReset) {
+      if (shouldFullReset(savedCount, currentCount)) {
         checkedCells = [];
         imageBuffer = await generateResetImage();
         wasReset = true;
       } else {
         if (diff > 0) {
-          checkedCells = applyRandomRemoval(checkedCells, diff);
+          checkedCells = applyRandomRemovalCells(checkedCells, diff);
         }
         imageBuffer = await generateGridImage(checkedCells);
       }
