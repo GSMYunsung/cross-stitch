@@ -46,9 +46,8 @@ export const useAuth = () => {
 
       return false;
     } catch (error) {
-      // TODO: 에러처리
+      console.error("GitHub 로그인 실패:", error);
       return false;
-      // ...
     }
   };
 

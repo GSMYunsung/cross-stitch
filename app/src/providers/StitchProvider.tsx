@@ -1,6 +1,6 @@
 "use client";
-import { createContext, useContext, useRef, useState } from "react";
-import { StitchCell } from "../types/crossTitch";
+import { createContext, useContext, useMemo, useRef, useState } from "react";
+import { GAME_MODE, GameMode, StitchCell } from "../types/crossTitch";
 import {
   CROSSTITCH_DEFAULT_COLOR,
   CROSSTITCH_DEFAULT_SELECT_COLOR,
@@ -10,44 +10,55 @@ import {
 const StitchContext = createContext<{
   gridRef: React.RefObject<HTMLDivElement | null>;
   hasCheckedItem: () => boolean;
+  checkedCount: number;
   gridState: StitchCell[][];
   updateGridSate: (newData: StitchCell[][]) => void;
   resetGridState: () => void;
   selectColor: string;
   updateSelectColor: (selectColor: string) => void;
+  paletteHistory: string[];
+  mode: GameMode;
 } | null>(null);
 
-export function StitchProvider({ children }: { children: React.ReactNode }) {
+const makeBlankGrid = (): StitchCell[][] =>
+  Array.from({ length: CROSSTITCH_SPEC }, () =>
+    Array.from({ length: CROSSTITCH_SPEC }, () => ({
+      color: CROSSTITCH_DEFAULT_COLOR,
+      isChecked: false,
+    })),
+  );
+
+interface StitchProviderProps {
+  children: React.ReactNode;
+  initialGrid?: StitchCell[][];
+  mode?: GameMode;
+}
+
+export function StitchProvider({ children, initialGrid, mode = GAME_MODE.CHALLENGE }: StitchProviderProps) {
   const gridRef = useRef<HTMLDivElement>(null);
-  const [selectColor, setSelectColor] = useState(
-    CROSSTITCH_DEFAULT_SELECT_COLOR,
+  const [selectColor, setSelectColor] = useState(CROSSTITCH_DEFAULT_SELECT_COLOR);
+  const [paletteHistory, setPaletteHistory] = useState<string[]>([]);
+  const [gridState, setGridState] = useState<StitchCell[][]>(
+    () => initialGrid ?? makeBlankGrid(),
   );
 
-  const initialGridState: StitchCell[][] = Array.from(
-    { length: CROSSTITCH_SPEC },
-    () =>
-      Array.from({ length: CROSSTITCH_SPEC }, () => ({
-        color: CROSSTITCH_DEFAULT_COLOR,
-        isChecked: false,
-      })),
+  const checkedCount = useMemo(
+    () => gridState.flat().filter((cell) => cell.isChecked).length,
+    [gridState],
   );
 
-  const [gridState, setGridState] = useState(initialGridState);
+  const hasCheckedItem = (): boolean => checkedCount > 0;
 
-  const hasCheckedItem = (): boolean => {
-    return gridState.some((row) => row.some((cell) => cell.isChecked));
-  };
+  const updateGridSate = (newData: StitchCell[][]) => setGridState(newData);
 
-  const updateGridSate = (newData: StitchCell[][]) => {
-    setGridState(newData);
-  };
+  const resetGridState = () => setGridState(makeBlankGrid());
 
-  const resetGridState = () => {
-    setGridState(initialGridState);
-  };
-
-  const updateSelectColor = (selectColor: string) => {
-    setSelectColor(selectColor);
+  const updateSelectColor = (color: string) => {
+    setSelectColor(color);
+    setPaletteHistory((prev) => {
+      const filtered = prev.filter((c) => c !== color);
+      return [color, ...filtered].slice(0, 8);
+    });
   };
 
   return (
@@ -55,11 +66,14 @@ export function StitchProvider({ children }: { children: React.ReactNode }) {
       value={{
         selectColor,
         updateSelectColor,
+        paletteHistory,
         gridRef,
         hasCheckedItem,
+        checkedCount,
         gridState,
         updateGridSate,
         resetGridState,
+        mode,
       }}
     >
       {children}
