@@ -4,9 +4,8 @@ const compareWithoutExtension = (firstString: string, secondString: string) => {
   return removeExt(firstString) === removeExt(secondString);
 };
 
-const generateReadmeMarkdown = (imageUrl: string): string => {
-  return `
-  <img src=${imageUrl} width="200" height="400"/>`;
+const generateReadmeMarkdown = (uid: string, origin: string): string => {
+  return `<img src="${origin}/api/readme-card/${uid}" width="500" height="215"/>`;
 };
 
 export { compareWithoutExtension, generateReadmeMarkdown };

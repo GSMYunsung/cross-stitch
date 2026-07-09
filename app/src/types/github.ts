@@ -85,3 +85,10 @@ export interface StitchFileInfo {
 }
 
 export type StitchFileList = StitchFileInfo[] | undefined;
+
+export interface GitHubStats {
+  publicRepos: number;
+  followers: number;
+  prs: number;
+  issues: number;
+}
