@@ -27,9 +27,7 @@ export default function Header() {
       className="flex items-center justify-between px-5 py-3 sticky top-0 z-50"
       style={{ background: "#F5EEE6", borderBottom: "2px solid #1A1A1A" }}
     >
-      {/* 왼쪽: 로고 + 모드/커밋 배지 */}
       <div className="flex items-center gap-3">
-        {/* S 로고 박스 */}
         <div
           className="flex items-center justify-center w-10 h-10"
           style={{ background: "#C41E3A", borderRadius: 4 }}
@@ -80,7 +78,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* 오른쪽: 스트릭 + 아바타 + 로그아웃 */}
       <div className="flex items-center gap-4">
         {/* MONTHLY — 커밋 한도가 있는 모드에서만 표시 */}
         {modeCfg?.flags.hasCommitLimit && (
@@ -112,7 +109,6 @@ export default function Header() {
           </div>
         )}
 
-        {/* 아바타 */}
         {user.photoURL ? (
           <Image
             src={user.photoURL}
@@ -133,7 +129,6 @@ export default function Header() {
           </div>
         )}
 
-        {/* 로그아웃 */}
         <button
           className="font-label text-[10px] px-3 py-1.5 cursor-pointer transition-all"
           style={{

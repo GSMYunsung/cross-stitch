@@ -16,7 +16,6 @@ export default function Page() {
       style={{ background: "#F5EEE6" }}
     >
       <div className="w-full max-w-[360px]">
-        {/* 로고 섹션 */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div
@@ -46,11 +45,9 @@ export default function Page() {
             </div>
           </div>
 
-          {/* 데코 라인 */}
           <div style={{ borderTop: "2px solid #1A1A1A" }} />
         </div>
 
-        {/* 로그인 카드 */}
         <div
           style={{
             background: "#FFFFFF",
@@ -69,7 +66,6 @@ export default function Page() {
           <GithubButton />
         </div>
 
-        {/* 피처 리스트 */}
         <div className="flex flex-col gap-0 mb-5">
           {features.map((f, i) => (
             <div
@@ -92,7 +88,6 @@ export default function Page() {
           ))}
         </div>
 
-        {/* 모드 선택 안내 */}
         <div
           style={{
             border: "1.5px solid #1A1A1A",
@@ -108,7 +103,6 @@ export default function Page() {
             </span>
           </div>
 
-          {/* 일반 모드 */}
           <div
             className="flex items-start gap-3 px-4 py-3.5"
             style={{ borderBottom: "1px solid #D5CFC7" }}
@@ -131,7 +125,6 @@ export default function Page() {
             </div>
           </div>
 
-          {/* 도전 모드 */}
           <div className="flex items-start gap-3 px-4 py-3.5">
             <div
               className="flex-shrink-0 w-7 h-7 flex items-center justify-center text-base"

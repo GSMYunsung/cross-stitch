@@ -30,7 +30,6 @@ export const useAuth = () => {
       const token = credential?.accessToken;
 
       if (token) {
-        //httpOnly 쿠키를 설정
         const res = await fetch("/api/github/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

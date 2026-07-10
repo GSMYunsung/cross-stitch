@@ -32,7 +32,6 @@ export function WelcomeModal({ isOpen, onStart }: Props) {
           maxWidth: 400,
         }}
       >
-        {/* 헤더 */}
         <div
           className="px-5 py-4"
           style={{ background: "#1A1A1A", borderBottom: "2px solid #1A1A1A" }}
@@ -45,7 +44,6 @@ export function WelcomeModal({ isOpen, onStart }: Props) {
           </p>
         </div>
 
-        {/* 모드 탭 */}
         <div className="flex" style={{ borderBottom: "1.5px solid #1A1A1A" }}>
           {MODE_LIST.map((m, idx) => {
             const isActive = activeId === m.id;
@@ -67,7 +65,6 @@ export function WelcomeModal({ isOpen, onStart }: Props) {
           })}
         </div>
 
-        {/* 모드 설명 */}
         <div className="px-5 py-4" style={{ minHeight: 160 }}>
           <div className="flex items-center gap-2 mb-2">
             <span
@@ -103,7 +100,6 @@ export function WelcomeModal({ isOpen, onStart }: Props) {
           </div>
         </div>
 
-        {/* 버튼 */}
         <div
           className="px-5 pb-5"
           style={{ borderTop: "1.5px solid #E8E2DA", paddingTop: 16 }}

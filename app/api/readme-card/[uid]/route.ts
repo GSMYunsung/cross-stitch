@@ -48,7 +48,6 @@ function generateSVG({
     ? `<image href="data:image/png;base64,${pixelArtBase64}" x="1" y="${HEADER_H + 1}" width="${LEFT_W - 2}" height="${H - HEADER_H - 2}" preserveAspectRatio="xMidYMid meet"/>`
     : "";
 
-  // stat grid positions
   const g1x = RIGHT_X + 14;
   const g2x = RIGHT_X + 14 + Math.floor(RIGHT_W / 2) - 4;
   const gr1y = DIVIDER_Y + 22;
@@ -123,7 +122,6 @@ export async function GET(
     const now = new Date();
     const monthLabel = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-    // Fetch pixel art from Firebase Storage
     let pixelArtBase64: string | null = null;
     try {
       const bucket = adminStorage.bucket();

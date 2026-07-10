@@ -52,7 +52,6 @@ export default function OnboardingModal() {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 헤더 */}
         <div
           className="flex items-center justify-between px-5 py-3"
           style={{ background: "#1A1A1A", borderBottom: "2px solid #1A1A1A" }}
@@ -80,7 +79,6 @@ export default function OnboardingModal() {
           </button>
         </div>
 
-        {/* 스텝 인디케이터 */}
         <div className="flex" style={{ borderBottom: "1.5px solid #D5CFC7" }}>
           {steps.map((_, i) => (
             <div
@@ -91,7 +89,6 @@ export default function OnboardingModal() {
           ))}
         </div>
 
-        {/* 콘텐츠 */}
         <div className="p-6">
           <span
             className="font-label text-[9px] block mb-2"
@@ -110,7 +107,6 @@ export default function OnboardingModal() {
           </p>
         </div>
 
-        {/* 버튼 */}
         <div
           className="flex gap-2 px-5 pb-5"
           style={{ borderTop: "1.5px solid #D5CFC7", paddingTop: 16 }}

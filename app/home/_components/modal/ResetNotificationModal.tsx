@@ -22,7 +22,6 @@ export function ResetNotificationModal({ isOpen, onClose }: Props) {
           maxWidth: 340,
         }}
       >
-        {/* 헤더 */}
         <div
           className="px-5 py-3 flex items-center justify-between"
           style={{ background: "#C41E3A", borderBottom: "2px solid #1A1A1A" }}

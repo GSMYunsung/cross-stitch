@@ -133,7 +133,6 @@ export default function HomeContent() {
             maxWidth: 360,
           }}
         >
-          {/* 헤더 */}
           <div
             className="px-5 py-3 flex items-center justify-between"
             style={{ borderBottom: "1.5px solid #1A1A1A", background: "#1A1A1A" }}
@@ -151,7 +150,6 @@ export default function HomeContent() {
             )}
           </div>
 
-          {/* 이미지 미리보기 */}
           <div
             className="mx-4 mt-4 flex items-center justify-center"
             style={{
@@ -176,7 +174,6 @@ export default function HomeContent() {
             )}
           </div>
 
-          {/* 메타 */}
           <div className="px-4 pt-3 pb-1">
             <p className="font-label text-[9px]" style={{ color: "#7A7A7A" }}>
               {checkedCount} CELLS FILLED ·{" "}
@@ -187,7 +184,6 @@ export default function HomeContent() {
             </p>
           </div>
 
-          {/* 버튼 */}
           <div className="flex gap-2 p-4">
             <button
               onClick={handleFreshStart}

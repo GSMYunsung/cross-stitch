@@ -183,13 +183,10 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
     >
       <OnboardingModal />
 
-      {/* 3-column layout */}
       <div className="flex flex-1 gap-4 p-4 overflow-auto justify-center">
 
-        {/* ── LEFT: Color Picker ── */}
         <div className="flex flex-col gap-3 flex-shrink-0 w-[250px] self-start sticky top-4">
 
-          {/* Color Picker Panel */}
           <div
             style={{
               background: "#FFFFFF",
@@ -219,7 +216,6 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
               }}
             />
 
-            {/* 프리셋 색상 */}
             <div className="flex gap-2 mt-3">
               {PRESET_COLORS.map((preset) => (
                 <button
@@ -258,7 +254,6 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
             </div>
           </div>
 
-          {/* Palette History */}
           <div
             style={{
               background: "#FFFFFF",
@@ -296,11 +291,9 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
           </div>
         </div>
 
-        {/* ── CENTER: Grid + Progress + Buttons ── */}
         <div className="flex flex-col items-center justify-center gap-4 flex-1">
           <CrossTitch />
 
-          {/* Progress Bar */}
           {mode === GAME_MODE.CHALLENGE && (
             <div className="w-full max-w-[486px]">
               <div className="flex items-center justify-between mb-1.5">
@@ -334,7 +327,6 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="flex gap-2">
             <button
               onClick={resetGridState}
@@ -387,12 +379,9 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
           </div>
         </div>
 
-        {/* ── RIGHT: Templates + Tip ── */}
         <div className="flex flex-col gap-3 flex-shrink-0 w-[250px] self-start sticky top-4">
 
-          {/* Templates Panel */}
           <div
-            className=""
             style={{
               background: "#FFFFFF",
               border: "1.5px solid #1A1A1A",
@@ -434,7 +423,6 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
             </div>
           </div>
 
-          {/* Challenge Mode Tip */}
           {mode === GAME_MODE.CHALLENGE && (
             <div
               style={{
@@ -475,7 +463,6 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
             </div>
           )}
 
-          {/* 모드 변경 */}
           <button
             onClick={onModeChangeRequest}
             className="w-full py-2.5 font-label text-[10px] cursor-pointer transition-all"

@@ -74,7 +74,6 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
           boxShadow: "6px 6px 0 #1A1A1A",
         }}
       >
-        {/* 헤더 */}
         <div
           className="flex items-center justify-between px-5 py-3"
           style={{ background: "#1A1A1A", borderBottom: "2px solid #1A1A1A" }}
@@ -134,7 +133,6 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
           </div>
         ) : (
           <>
-            {/* 서브헤더 */}
             <div
               className="px-5 py-2"
               style={{ borderBottom: "1px solid #D5CFC7" }}
@@ -144,9 +142,7 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
               </span>
             </div>
 
-            {/* 본문 2열 */}
             <div className="flex gap-0" style={{ borderBottom: "1px solid #D5CFC7" }}>
-              {/* 좌측: 픽셀아트 이미지 */}
               <div
                 className="flex-1"
                 style={{
@@ -179,9 +175,7 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
                 )}
               </div>
 
-              {/* 우측: 통계 */}
               <div className="flex-1 flex flex-col gap-0">
-                {/* 주요 지표 — cfg 기반으로 렌더링 */}
                 <div
                   className="p-4"
                   style={{ background: cfg.card.heroBg, borderBottom: "1px solid #D5CFC7" }}
@@ -227,7 +221,6 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
                   </div>
                 </div>
 
-                {/* GitHub 통계 4칸 그리드 */}
                 <div className="grid grid-cols-2 gap-x-3 gap-y-3 p-4">
                   {[
                     { label: "REPOS", value: githubStats?.publicRepos },
@@ -251,7 +244,6 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
               </div>
             </div>
 
-            {/* 하단 복사 버튼 */}
             <div className="p-4">
               <button
                 className="w-full py-3 font-pixel cursor-pointer transition-all"

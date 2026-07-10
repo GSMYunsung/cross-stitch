@@ -76,13 +76,11 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      // 모든 유저: GitHub stats 업데이트
       const [githubStats, currentCount] = await Promise.all([
         getGitHubStats(githubUsername),
         getCommitCount(githubUsername),
       ]);
 
-      // 일반 모드: stats만 저장하고 그리드 변경 없음
       if (data.mode !== GAME_MODE.CHALLENGE) {
         await adminDb.collection("grids").doc(uid).set(
           { githubStats, updatedAt: new Date().toISOString() },
@@ -92,7 +90,6 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // 챌린지 모드: 그리드 업데이트 + stats 저장
       const savedCount: number = data.commitCount ?? 0;
       const diff = savedCount - currentCount;
 

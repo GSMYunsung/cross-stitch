@@ -25,7 +25,6 @@ export function ModeSelectionModal({ isOpen, onSelect }: Props) {
           maxWidth: 360,
         }}
       >
-        {/* 헤더 */}
         <div
           className="px-5 py-3"
           style={{ background: "#1A1A1A", borderBottom: "2px solid #1A1A1A" }}

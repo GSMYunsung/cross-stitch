@@ -76,7 +76,6 @@ export function TemplateModal({ isOpen, onClose }: Props) {
         className="w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 상단: 퍼플 헤더 */}
         <div
           className="flex items-center justify-between px-6 py-4"
           style={{ background: "linear-gradient(135deg, #7C3AED, #5B21B6)" }}
@@ -94,13 +93,11 @@ export function TemplateModal({ isOpen, onClose }: Props) {
           </button>
         </div>
 
-        {/* 하단: 화이트 콘텐츠 */}
         <div className="bg-white px-5 pt-4 pb-5">
           <p className="text-xs font-semibold mb-4" style={{ color: "#8B8BA0" }}>
             클릭하면 현재 그리드에 바로 적용돼요. 기존 작업은 덮어써져요.
           </p>
 
-          {/* 커밋 부족 경고 */}
           {shortage && (
             <div
               className="mb-4 px-4 py-3 rounded-2xl"
@@ -115,7 +112,6 @@ export function TemplateModal({ isOpen, onClose }: Props) {
             </div>
           )}
 
-          {/* 템플릿 그리드 */}
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
             {TEMPLATES.map((template) => {
               const isInsufficient =
