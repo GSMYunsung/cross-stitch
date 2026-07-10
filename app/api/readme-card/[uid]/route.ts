@@ -100,6 +100,29 @@ function generateSVG({
 </svg>`;
 }
 
+async function fetchGithubStats(username: string) {
+  const headers = {
+    Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+    Accept: "application/vnd.github.v3+json",
+  };
+  try {
+    const [userRes, prRes, issueRes] = await Promise.all([
+      fetch(`https://api.github.com/users/${username}`, { headers }),
+      fetch(`https://api.github.com/search/issues?q=type:pr+author:${username}&per_page=1`, { headers }),
+      fetch(`https://api.github.com/search/issues?q=type:issue+author:${username}&per_page=1`, { headers }),
+    ]);
+    const [user, pr, issue] = await Promise.all([userRes.json(), prRes.json(), issueRes.json()]);
+    return {
+      publicRepos: user.public_repos ?? 0,
+      followers: user.followers ?? 0,
+      prs: pr.total_count ?? 0,
+      issues: issue.total_count ?? 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
@@ -117,20 +140,24 @@ export async function GET(
     const checkedCount = checkedCells.length;
     const commitCount: number = data.commitCount ?? 0;
     const mode: string | undefined = data.mode;
-    const githubStats = data.githubStats ?? null;
+    const githubUsername: string | undefined = data.githubUsername;
 
     const now = new Date();
     const monthLabel = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-    let pixelArtBase64: string | null = null;
-    try {
-      const bucket = adminStorage.bucket();
-      const file = bucket.file(`images/${uid}.png`);
-      const [buffer] = await file.download();
-      pixelArtBase64 = buffer.toString("base64");
-    } catch {
-      // No image yet — show empty panel
-    }
+    const [pixelArtBase64, githubStats] = await Promise.all([
+      (async () => {
+        try {
+          const bucket = adminStorage.bucket();
+          const [buffer] = await bucket.file(`images/${uid}.png`).download();
+          return buffer.toString("base64");
+        } catch {
+          // No image yet — show empty panel
+          return null;
+        }
+      })(),
+      githubUsername ? fetchGithubStats(githubUsername) : Promise.resolve(null),
+    ]);
 
     const svg = generateSVG({ pixelArtBase64, mode, commitCount, checkedCount, githubStats, monthLabel });
 
