@@ -14,9 +14,7 @@ export const useAuth = () => {
 
   const githubogout = async () => {
     try {
-      await signOut(auth).then(() => {
-        console.log("잘됨?");
-      });
+      await signOut(auth);
     } catch (error) {
       console.error("로그아웃 실패:", error);
     }

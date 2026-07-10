@@ -1,7 +1,7 @@
 "use client";
 
 import BackPressHandler from "@/app/src/components/BackPressHandler";
-import { clearResetFlag, saveMode } from "@/app/src/hooks/useGridPersistence";
+import { clearResetFlag } from "@/app/src/hooks/useGridPersistence";
 import { useAuthInfo } from "@/app/src/providers/AuthProvider";
 import { StitchProvider } from "@/app/src/providers/StitchProvider";
 import { GAME_MODE, GameMode } from "@/app/src/types/crossTitch";
@@ -38,8 +38,7 @@ export default function HomeContent() {
     setModeChoice(mode);
   };
 
-  const handleModeChange = async (newMode: GameMode) => {
-    if (user?.uid) await saveMode(user.uid, newMode);
+  const handleModeChange = (newMode: GameMode) => {
     updateMode(newMode);
     setModeChoice(newMode);
     setRestoreChoice("fresh");
