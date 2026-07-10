@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthInfo } from "../providers/AuthProvider";
-import { GAME_MODE } from "../types/crossTitch";
+import { DEFAULT_MODE_CONFIG, MODE_MAP } from "../config/modes";
 
 export default function Header() {
   const { user, commitInfo, savedGridData, authInfoReset, effectiveCommitCount } = useAuthInfo();
@@ -14,7 +14,7 @@ export default function Header() {
   if (!user) return null;
 
   const currentMode = savedGridData?.mode;
-  const isChallengeMode = currentMode === GAME_MODE.CHALLENGE;
+  const modeCfg = (currentMode && MODE_MAP[currentMode]) ?? null;
   const commitCount = commitInfo?.total_count ?? 0;
 
   // 월간 커밋 도트 (10칸, 각 1커밋 = 1칸, 10개 초과 시 +N 표시)
@@ -43,17 +43,11 @@ export default function Header() {
         </div>
 
         <div>
-          <div
-            className="font-black tracking-wider text-sm"
-            style={{
-              fontFamily: "var(--font-space-mono, 'Space Mono', monospace)",
-              color: "#1A1A1A",
-            }}
-          >
+          <div className="font-pixel" style={{ color: "#1A1A1A" }}>
             STITCH.COMMIT
           </div>
           <div className="flex items-center gap-2 mt-0.5">
-            {currentMode && (
+            {modeCfg && (
               <span
                 className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5"
                 style={{
@@ -63,17 +57,17 @@ export default function Header() {
                   fontFamily: "var(--font-space-mono, monospace)",
                 }}
               >
-                {currentMode === GAME_MODE.NORMAL ? "일반 모드" : "도전 모드"}
-                {currentMode === GAME_MODE.CHALLENGE && (
+                {modeCfg.label.ko}
+                {modeCfg.flags.hasCommitLimit && (
                   <span style={{ color: "#FF6B6B" }}>✕</span>
                 )}
               </span>
             )}
-            {isChallengeMode && (
+            {modeCfg?.flags.hasCommitLimit && (
               <span
                 className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5"
                 style={{
-                  background: "#3B9A3B",
+                  background: modeCfg.label.color,
                   color: "#FFFFFF",
                   borderRadius: 3,
                   fontFamily: "var(--font-space-mono, monospace)",
@@ -88,8 +82,8 @@ export default function Header() {
 
       {/* 오른쪽: 스트릭 + 아바타 + 로그아웃 */}
       <div className="flex items-center gap-4">
-        {/* MONTHLY */}
-        {isChallengeMode && (
+        {/* MONTHLY — 커밋 한도가 있는 모드에서만 표시 */}
+        {modeCfg?.flags.hasCommitLimit && (
           <div className="hidden sm:flex flex-col items-end gap-1">
             <span
               className="font-label text-[10px]"
@@ -103,14 +97,14 @@ export default function Header() {
                   key={i}
                   className="w-2.5 h-2.5"
                   style={{
-                    background: active ? "#3B9A3B" : "#D5CFC7",
+                    background: active ? modeCfg.label.color : "#D5CFC7",
                     borderRadius: 2,
                     border: "1px solid #1A1A1A",
                   }}
                 />
               ))}
               {extraCommits > 0 && (
-                <span className="font-label text-[9px]" style={{ color: "#3B9A3B" }}>
+                <span className="font-label text-[9px]" style={{ color: modeCfg.label.color }}>
                   +{extraCommits}
                 </span>
               )}

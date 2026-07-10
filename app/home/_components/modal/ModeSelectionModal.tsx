@@ -1,6 +1,7 @@
 "use client";
 
-import { GAME_MODE, GameMode } from "@/app/src/types/crossTitch";
+import { MODE_LIST } from "@/app/src/config/modes";
+import { GameMode } from "@/app/src/types/crossTitch";
 
 interface Props {
   isOpen: boolean;
@@ -39,63 +40,40 @@ export function ModeSelectionModal({ isOpen, onSelect }: Props) {
             나중에 변경할 수 없어요. 신중하게 선택하세요.
           </p>
 
-          {/* 일반 모드 */}
-          <button
-            onClick={() => onSelect(GAME_MODE.NORMAL)}
-            className="text-left p-4 cursor-pointer transition-all"
-            style={{ border: "1.5px solid #1A1A1A", background: "#FDFCFA" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#F0E9E0";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "3px 3px 0 #1A1A1A";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#FDFCFA";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-            }}
-          >
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-lg">🎨</span>
-              <span className="font-label text-[10px]" style={{ color: "#1A1A1A" }}>
-                NORMAL MODE
-              </span>
-            </div>
-            <p className="text-xs leading-relaxed" style={{ color: "#7A7A7A" }}>
-              커밋 수에 관계없이 자유롭게 채워요.
-              칸이 줄어들거나 초기화되지 않아요.
-            </p>
-          </button>
-
-          {/* 도전 모드 */}
-          <button
-            onClick={() => onSelect(GAME_MODE.CHALLENGE)}
-            className="text-left p-4 cursor-pointer transition-all relative"
-            style={{ border: "1.5px solid #C41E3A", background: "#FDFCFA" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#FFF5F5";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "3px 3px 0 #C41E3A";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#FDFCFA";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-            }}
-          >
-            <div
-              className="absolute top-2 right-2 font-label text-[8px] px-1.5 py-0.5"
-              style={{ background: "#C41E3A", color: "#fff" }}
+          {MODE_LIST.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => onSelect(m.id)}
+              className="text-left p-4 cursor-pointer transition-all relative"
+              style={{ border: `1.5px solid ${m.label.color}`, background: "#FDFCFA" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "#F5F0F0";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = `3px 3px 0 ${m.label.color}`;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "#FDFCFA";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+              }}
             >
-              GITHUB 연동
-            </div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-lg">⚔️</span>
-              <span className="font-label text-[10px]" style={{ color: "#C41E3A" }}>
-                CHALLENGE MODE
-              </span>
-            </div>
-            <p className="text-xs leading-relaxed" style={{ color: "#7A7A7A" }}>
-              이번 달 커밋 수만큼 칸을 사용해요.
-              커밋이 줄면 십자수도 함께 줄어들어요.
-            </p>
-          </button>
+              {m.label.badge && (
+                <div
+                  className="absolute top-2 right-2 font-label text-[8px] px-1.5 py-0.5"
+                  style={{ background: m.label.color, color: "#fff" }}
+                >
+                  {m.label.badge}
+                </div>
+              )}
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-lg">{m.label.icon}</span>
+                <span className="font-label text-[10px]" style={{ color: m.label.color }}>
+                  {m.label.en}
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: "#7A7A7A" }}>
+                {m.content.selectionDesc}
+              </p>
+            </button>
+          ))}
         </div>
       </div>
     </div>

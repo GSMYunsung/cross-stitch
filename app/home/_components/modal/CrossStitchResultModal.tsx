@@ -2,23 +2,18 @@
 
 import { useAuthInfo } from "@/app/src/providers/AuthProvider";
 import { useStitch } from "@/app/src/providers/StitchProvider";
-import { GAME_MODE } from "@/app/src/types/crossTitch";
-import { CROSSTITCH_SPEC } from "@/app/src/constant";
+import { DEFAULT_MODE_CONFIG, MODE_MAP } from "@/app/src/config/modes";
 import { useAuth } from "@/app/src/hooks/useAuth";
 import { useFile } from "@/app/src/hooks/useFile";
 import { StitchFileInfo } from "@/app/src/types/github";
 import { compareWithoutExtension, generateReadmeMarkdown } from "@/app/src/utils/string";
-import Lottie from "react-lottie-player";
 import Image from "next/image";
-import lottieJson from "../../../../public/check.json";
 import { useEffect, useState } from "react";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const TOTAL_CELLS = CROSSTITCH_SPEC * CROSSTITCH_SPEC;
 
 export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
   const { getAllFilesInfo } = useFile();
@@ -30,8 +25,9 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
   const [isImgLoaded, setIsImgLoaded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
-  const isChallenge = mode === GAME_MODE.CHALLENGE;
-  const progressTotal = isChallenge ? (commitInfo?.total_count ?? 0) : TOTAL_CELLS;
+  const cfg = (mode && MODE_MAP[mode]) ?? DEFAULT_MODE_CONFIG;
+  const modeData = { commitCount: commitInfo?.total_count ?? 0, checkedCount };
+  const progressTotal = cfg.card.progressTotal(modeData);
   const progressPct = progressTotal > 0 ? Math.min((checkedCount / progressTotal) * 100, 100) : 0;
   const now = new Date();
   const monthLabel = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -83,7 +79,7 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
           className="flex items-center justify-between px-5 py-3"
           style={{ background: "#1A1A1A", borderBottom: "2px solid #1A1A1A" }}
         >
-          <span className="font-label text-[11px]" style={{ color: "#FFFFFF" }}>
+          <span className="font-pixel" style={{ color: "#FFFFFF" }}>
             RESULT
           </span>
           <button
@@ -98,9 +94,21 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
         {isCopied ? (
           /* 복사 완료 화면 */
           <div className="flex flex-col items-center py-8 px-5">
-            <Lottie loop={false} animationData={lottieJson} play style={{ width: 120, height: 120 }} />
-            <p className="font-black text-xl mt-2" style={{ color: "#1A1A1A" }}>
-              복사 완료!
+            <div
+              className="flex items-center justify-center mb-5"
+              style={{
+                width: 50,
+                height: 50,
+                background: "#1A1A1A",
+                boxShadow: "4px 4px 0 #C41E3A",
+                animation: "pixel-pop 0.2s ease-out",
+              }}
+            >
+              <span style={{ color: "#FFFFFF", fontSize: 24, lineHeight: 1 }}>✓</span>
+            </div>
+            <style>{`@keyframes pixel-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
+            <p className="font-pixel mt-4" style={{ color: "#1A1A1A", fontSize: 12 }}>
+              COPIED!
             </p>
             <p className="text-sm mt-1 mb-5" style={{ color: "#7A7A7A" }}>
               GitHub README에 붙여넣기 하세요.
@@ -131,8 +139,8 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
               className="px-5 py-2"
               style={{ borderBottom: "1px solid #D5CFC7" }}
             >
-              <span className="font-label text-[10px]" style={{ color: "#7A7A7A" }}>
-                {isChallenge ? "THIS MONTH" : "MY CANVAS"} · {monthLabel}
+              <span className="font-pixel" style={{ color: "#7A7A7A" }}>
+                {cfg.card.headerTitle} · {monthLabel}
               </span>
             </div>
 
@@ -173,93 +181,51 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
 
               {/* 우측: 통계 */}
               <div className="flex-1 flex flex-col gap-0">
-                {/* 주요 지표 */}
-                {isChallenge ? (
-                  /* 도전 모드: 이번 달 커밋 수 강조 블록 */
-                  <div
-                    className="p-4"
-                    style={{ background: "#1A1A1A", borderBottom: "1px solid #D5CFC7" }}
-                  >
-                    <span className="font-label text-[10px]" style={{ color: "#C41E3A" }}>
-                      THIS MONTH COMMITS
-                    </span>
-                    <div className="flex items-end gap-2 mt-1">
-                      <span
-                        className="font-black leading-none"
-                        style={{
-                          color: "#FFFFFF",
-                          fontFamily: "var(--font-space-mono, monospace)",
-                          fontSize: "3rem",
-                        }}
-                      >
-                        {commitInfo?.total_count ?? 0}
-                      </span>
-                      <span className="font-label text-[10px] mb-1.5" style={{ color: "#888" }}>
-                        commits
-                      </span>
-                    </div>
-                    {/* 채운 칸 진행바 */}
-                    <div className="mt-3">
-                      <div className="flex justify-between mb-1">
-                        <span className="font-label text-[9px]" style={{ color: "#888" }}>
-                          {checkedCount}칸 채움
-                        </span>
-                        <span className="font-label text-[9px]" style={{ color: "#888" }}>
-                          {Math.round(progressPct)}%
-                        </span>
-                      </div>
-                      <div
-                        className="w-full h-1.5"
-                        style={{ background: "#333", borderRadius: 2 }}
-                      >
-                        <div
-                          style={{
-                            width: `${progressPct}%`,
-                            height: "100%",
-                            background: "#C41E3A",
-                            borderRadius: 2,
-                            transition: "width 0.6s ease",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  /* 일반 모드: 채운 칸 강조 */
-                  <div className="p-4" style={{ borderBottom: "1px solid #D5CFC7" }}>
-                    <span className="font-label text-[10px]" style={{ color: "#7A7A7A" }}>
-                      CANVAS
-                    </span>
-                    <div className="flex items-end gap-1.5 mt-0.5">
-                      <span
-                        className="font-black text-5xl leading-none"
-                        style={{ color: "#1A1A1A", fontFamily: "var(--font-space-mono, monospace)" }}
-                      >
-                        {checkedCount}
-                      </span>
-                    </div>
-                    <p className="font-label text-[9px] mt-1" style={{ color: "#7A7A7A" }}>
-                      {checkedCount}칸 채움 · 전체 {TOTAL_CELLS}칸
-                    </p>
-                    <div
-                      className="mt-2 w-full h-1.5"
-                      style={{ background: "#E8E2DA", borderRadius: 2 }}
+                {/* 주요 지표 — cfg 기반으로 렌더링 */}
+                <div
+                  className="p-4"
+                  style={{ background: cfg.card.heroBg, borderBottom: "1px solid #D5CFC7" }}
+                >
+                  <span className="font-pixel" style={{ color: cfg.label.color }}>
+                    {cfg.card.heroLabel}
+                  </span>
+                  <div className="flex items-end gap-2 mt-1">
+                    <span
+                      className="font-black leading-none"
+                      style={{
+                        color: cfg.card.heroTextColor,
+                        fontFamily: "var(--font-space-mono, monospace)",
+                        fontSize: "3rem",
+                      }}
                     >
+                      {cfg.card.heroValue(modeData)}
+                    </span>
+                  </div>
+                  <p className="font-label text-[9px] mt-1" style={{ color: cfg.card.heroSubColor }}>
+                    {cfg.card.subText(modeData)}
+                  </p>
+                  <div className="mt-3">
+                    <div className="flex justify-between mb-1">
+                      <span className="font-label text-[9px]" style={{ color: cfg.card.heroSubColor }}>
+                        {checkedCount}칸 채움
+                      </span>
+                      <span className="font-label text-[9px]" style={{ color: cfg.card.heroSubColor }}>
+                        {Math.round(progressPct)}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5" style={{ background: cfg.card.progressBg, borderRadius: 2 }}>
                       <div
                         style={{
                           width: `${progressPct}%`,
                           height: "100%",
-                          background: "#3B9A3B",
+                          background: cfg.label.color,
                           borderRadius: 2,
                           transition: "width 0.6s ease",
                         }}
                       />
                     </div>
-                    <p className="font-label text-[9px] mt-1 text-right" style={{ color: "#7A7A7A" }}>
-                      {Math.round(progressPct)}%
-                    </p>
                   </div>
-                )}
+                </div>
 
                 {/* GitHub 통계 4칸 그리드 */}
                 <div className="grid grid-cols-2 gap-x-3 gap-y-3 p-4">
@@ -276,7 +242,7 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
                       >
                         {value != null ? value.toLocaleString() : "—"}
                       </p>
-                      <p className="font-label text-[9px] mt-0.5" style={{ color: "#7A7A7A" }}>
+                      <p className="font-pixel mt-0.5" style={{ color: "#7A7A7A" }}>
                         {label}
                       </p>
                     </div>
@@ -288,7 +254,7 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
             {/* 하단 복사 버튼 */}
             <div className="p-4">
               <button
-                className="w-full py-3 font-label text-[11px] cursor-pointer transition-all"
+                className="w-full py-3 font-pixel cursor-pointer transition-all"
                 style={{
                   background: "#1A1A1A",
                   color: "#FFFFFF",
@@ -303,7 +269,7 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
                 }}
                 onClick={handleCopy}
               >
-                README 링크 복사하기
+                COPY README LINK
               </button>
             </div>
           </>

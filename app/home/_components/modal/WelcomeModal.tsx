@@ -1,5 +1,7 @@
 "use client";
 
+import { MODE_LIST } from "@/app/src/config/modes";
+import { GameMode } from "@/app/src/types/crossTitch";
 import { useState } from "react";
 
 interface Props {
@@ -7,38 +9,9 @@ interface Props {
   onStart: () => void;
 }
 
-const MODES = {
-  normal: {
-    icon: "🎨",
-    label: "NORMAL MODE",
-    color: "#3B9A3B",
-    title: "자유롭게 창작하는 모드",
-    desc: "커밋 수와 관계없이 원하는 만큼 칸을 채울 수 있어요. 칸이 줄어들거나 초기화되지 않아 편하게 작업할 수 있어요.",
-    bullets: [
-      { ok: true, text: "칸 수 제한 없음" },
-      { ok: true, text: "커밋 감소해도 영향 없음" },
-      { ok: true, text: "언제든 자유롭게" },
-    ],
-  },
-  challenge: {
-    icon: "⚔️",
-    label: "CHALLENGE MODE",
-    color: "#C41E3A",
-    title: "GitHub 커밋과 연동되는 모드",
-    desc: "이번 달 커밋 수만큼만 칸을 쓸 수 있어요. 커밋이 줄어들면 십자수도 함께 줄어들어요.",
-    bullets: [
-      { ok: true, text: "커밋 1개 = 픽셀 1칸" },
-      { ok: false, text: "커밋 감소 시 칸 제거됨" },
-      { ok: true, text: "GitHub 활동이 작품이 됨" },
-    ],
-  },
-} as const;
-
-type ModeKey = keyof typeof MODES;
-
 export function WelcomeModal({ isOpen, onStart }: Props) {
-  const [active, setActive] = useState<ModeKey>("normal");
-  const mode = MODES[active];
+  const [activeId, setActiveId] = useState<GameMode>(MODE_LIST[0].id);
+  const mode = MODE_LIST.find((m) => m.id === activeId) ?? MODE_LIST[0];
 
   if (!isOpen) return null;
 
@@ -74,23 +47,21 @@ export function WelcomeModal({ isOpen, onStart }: Props) {
 
         {/* 모드 탭 */}
         <div className="flex" style={{ borderBottom: "1.5px solid #1A1A1A" }}>
-          {(["normal", "challenge"] as ModeKey[]).map((key) => {
-            const m = MODES[key];
-            const isActive = active === key;
+          {MODE_LIST.map((m, idx) => {
+            const isActive = activeId === m.id;
             return (
               <button
-                key={key}
-                onClick={() => setActive(key)}
+                key={m.id}
+                onClick={() => setActiveId(m.id)}
                 className="flex-1 flex items-center justify-center gap-1.5 py-3 cursor-pointer font-label text-[10px] transition-all"
                 style={{
-                  background: isActive ? m.color : "#FDFCFA",
+                  background: isActive ? m.label.color : "#FDFCFA",
                   color: isActive ? "#FFFFFF" : "#7A7A7A",
-                  borderRight:
-                    key === "normal" ? "1.5px solid #1A1A1A" : "none",
+                  borderRight: idx < MODE_LIST.length - 1 ? "1.5px solid #1A1A1A" : "none",
                 }}
               >
-                <span>{m.icon}</span>
-                <span>{key === "normal" ? "일반" : "도전"}</span>
+                <span>{m.label.icon}</span>
+                <span>{m.label.ko.replace(" 모드", "")}</span>
               </button>
             );
           })}
@@ -101,22 +72,22 @@ export function WelcomeModal({ isOpen, onStart }: Props) {
           <div className="flex items-center gap-2 mb-2">
             <span
               className="font-label text-[9px] px-2 py-0.5"
-              style={{ background: mode.color, color: "#fff" }}
+              style={{ background: mode.label.color, color: "#fff" }}
             >
-              {mode.label}
+              {mode.label.en}
             </span>
           </div>
           <p className="text-sm font-bold mb-2" style={{ color: "#1A1A1A" }}>
-            {mode.title}
+            {mode.content.title}
           </p>
           <p
             className="text-xs leading-relaxed mb-4"
             style={{ color: "#7A7A7A" }}
           >
-            {mode.desc}
+            {mode.content.desc}
           </p>
           <div className="flex flex-col gap-1.5">
-            {mode.bullets.map((b, i) => (
+            {mode.content.bullets.map((b, i) => (
               <div key={i} className="flex items-center gap-2">
                 <span
                   className="font-label text-[9px] w-4 text-center flex-shrink-0"

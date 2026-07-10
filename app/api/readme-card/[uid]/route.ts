@@ -1,7 +1,7 @@
 import { adminDb, adminStorage } from "@/app/lib/firebase-admin";
+import { DEFAULT_MODE_CONFIG, MODE_MAP } from "@/app/src/config/modes";
 import { NextRequest, NextResponse } from "next/server";
 
-const TOTAL_CELLS = 400;
 const W = 500;
 const H = 215;
 const HEADER_H = 34;
@@ -33,23 +33,16 @@ function generateSVG({
   githubStats: { publicRepos?: number; followers?: number; prs?: number; issues?: number } | null;
   monthLabel: string;
 }): string {
-  const isChallenge = mode === "challenge";
-  const progressTotal = isChallenge ? commitCount : TOTAL_CELLS;
+  const modeCfg = (mode && MODE_MAP[mode as keyof typeof MODE_MAP]) || DEFAULT_MODE_CONFIG;
+  const card = modeCfg.card;
+  const modeData = { commitCount, checkedCount };
+
+  const progressTotal = card.progressTotal(modeData);
   const progressPct = progressTotal > 0 ? Math.min(checkedCount / progressTotal, 1) : 0;
   const barFill = Math.round(progressPct * BAR_W);
 
-  const heroValue = isChallenge ? commitCount : checkedCount;
-  const heroLabel = isChallenge ? "THIS MONTH COMMITS" : "CANVAS";
-  const heroColor = isChallenge ? "#C41E3A" : "#3B9A3B";
-  const heroBg = isChallenge ? "#1A1A1A" : "#FFFFFF";
-  const heroTextColor = isChallenge ? "#FFFFFF" : "#1A1A1A";
-  const heroSubColor = isChallenge ? "#888888" : "#7A7A7A";
-  const progressBg = isChallenge ? "#333333" : "#E8E2DA";
-  const headerTitle = isChallenge ? "THIS MONTH" : "MY CANVAS";
-
-  const subText = isChallenge
-    ? `${checkedCount}칸 채움 / 한도 ${commitCount}`
-    : `${checkedCount}칸 채움 / 전체 ${TOTAL_CELLS}`;
+  const heroValue = card.heroValue(modeData);
+  const subText = card.subText(modeData);
 
   const imageEl = pixelArtBase64
     ? `<image href="data:image/png;base64,${pixelArtBase64}" x="1" y="${HEADER_H + 1}" width="${LEFT_W - 2}" height="${H - HEADER_H - 2}" preserveAspectRatio="xMidYMid meet"/>`
@@ -67,7 +60,7 @@ function generateSVG({
   <!-- header -->
   <rect width="${W}" height="${HEADER_H}" fill="#1A1A1A"/>
   <text x="14" y="22" font-family="'Courier New',Courier,monospace" font-size="12" fill="#FFFFFF" font-weight="bold">STITCH.COMMIT</text>
-  <text x="${W - 14}" y="22" font-family="'Courier New',Courier,monospace" font-size="10" fill="#888888" text-anchor="end">${headerTitle} · ${monthLabel}</text>
+  <text x="${W - 14}" y="22" font-family="'Courier New',Courier,monospace" font-size="10" fill="#888888" text-anchor="end">${card.headerTitle} · ${monthLabel}</text>
 
   <!-- left: pixel art -->
   <rect x="0" y="${HEADER_H}" width="${LEFT_W}" height="${H - HEADER_H}" fill="#D5CFC7"/>
@@ -77,15 +70,15 @@ function generateSVG({
   <line x1="${LEFT_W}" y1="${HEADER_H}" x2="${LEFT_W}" y2="${H}" stroke="#D5CFC7" stroke-width="1"/>
 
   <!-- right top: main metric -->
-  <rect x="${RIGHT_X}" y="${HEADER_H}" width="${RIGHT_W}" height="${TOP_H}" fill="${heroBg}"/>
-  <text x="${BAR_X}" y="${HEADER_H + 20}" font-family="'Courier New',Courier,monospace" font-size="10" fill="${heroColor}">${heroLabel}</text>
-  <text x="${BAR_X}" y="${HEADER_H + 62}" font-family="'Courier New',Courier,monospace" font-size="42" fill="${heroTextColor}" font-weight="bold">${heroValue}</text>
-  <text x="${BAR_X}" y="${HEADER_H + 78}" font-family="'Courier New',Courier,monospace" font-size="9" fill="${heroSubColor}">${subText}</text>
+  <rect x="${RIGHT_X}" y="${HEADER_H}" width="${RIGHT_W}" height="${TOP_H}" fill="${card.heroBg}"/>
+  <text x="${BAR_X}" y="${HEADER_H + 20}" font-family="'Courier New',Courier,monospace" font-size="10" fill="${modeCfg.label.color}">${card.heroLabel}</text>
+  <text x="${BAR_X}" y="${HEADER_H + 62}" font-family="'Courier New',Courier,monospace" font-size="42" fill="${card.heroTextColor}" font-weight="bold">${heroValue}</text>
+  <text x="${BAR_X}" y="${HEADER_H + 78}" font-family="'Courier New',Courier,monospace" font-size="9" fill="${card.heroSubColor}">${subText}</text>
 
   <!-- progress bar -->
-  <rect x="${BAR_X}" y="${HEADER_H + TOP_H - 22}" width="${BAR_W}" height="5" fill="${progressBg}" rx="2"/>
-  <rect x="${BAR_X}" y="${HEADER_H + TOP_H - 22}" width="${barFill}" height="5" fill="${heroColor}" rx="2"/>
-  <text x="${BAR_X + BAR_W}" y="${HEADER_H + TOP_H - 10}" font-family="'Courier New',Courier,monospace" font-size="9" fill="${heroSubColor}" text-anchor="end">${Math.round(progressPct * 100)}%</text>
+  <rect x="${BAR_X}" y="${HEADER_H + TOP_H - 22}" width="${BAR_W}" height="5" fill="${card.progressBg}" rx="2"/>
+  <rect x="${BAR_X}" y="${HEADER_H + TOP_H - 22}" width="${barFill}" height="5" fill="${modeCfg.label.color}" rx="2"/>
+  <text x="${BAR_X + BAR_W}" y="${HEADER_H + TOP_H - 10}" font-family="'Courier New',Courier,monospace" font-size="9" fill="${card.heroSubColor}" text-anchor="end">${Math.round(progressPct * 100)}%</text>
 
   <!-- divider horizontal -->
   <line x1="${RIGHT_X}" y1="${DIVIDER_Y}" x2="${W}" y2="${DIVIDER_Y}" stroke="#D5CFC7" stroke-width="1"/>
