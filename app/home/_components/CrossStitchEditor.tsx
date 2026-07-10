@@ -25,6 +25,9 @@ interface TemplateThumbnailProps {
 }
 
 function TemplateThumbnail({ template, isLocked, isSelected, onClick }: TemplateThumbnailProps) {
+  const [hovered, setHovered] = useState(false);
+  const active = hovered && !isLocked && !isSelected;
+
   return (
     <button
       onClick={onClick}
@@ -32,6 +35,8 @@ function TemplateThumbnail({ template, isLocked, isSelected, onClick }: Template
       className="relative flex flex-col items-center cursor-pointer"
       style={{ opacity: isLocked ? 0.45 : 1 }}
       title={isLocked ? `커밋 ${template.cells.length}개 필요` : template.name}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div
         style={{
@@ -45,6 +50,9 @@ function TemplateThumbnail({ template, isLocked, isSelected, onClick }: Template
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
+          boxShadow: active ? "3px 3px 0 #1A1A1A" : "none",
+          transform: active ? "translate(-1px, -1px)" : "none",
+          transition: "box-shadow 0.1s, transform 0.1s",
         }}
       >
         <svg
@@ -179,7 +187,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
       <div className="flex flex-1 gap-4 p-4 overflow-auto justify-center">
 
         {/* ── LEFT: Color Picker ── */}
-        <div className="font-maru flex flex-col gap-3 flex-shrink-0 w-[250px] self-start sticky top-4">
+        <div className="flex flex-col gap-3 flex-shrink-0 w-[250px] self-start sticky top-4">
 
           {/* Color Picker Panel */}
           <div
@@ -190,7 +198,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
             }}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="font-label" style={{ color: "#1A1A1A" }}>
+              <span className="font-pixel" style={{ color: "#1A1A1A" }}>
                 COLOR PICKER
               </span>
               <button
@@ -220,7 +228,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
                     updateSelectColor(preset);
                     setColor({ ...color, hex: preset } as typeof color);
                   }}
-                  className="cursor-pointer flex-1 transition-all"
+                  className="cursor-pointer flex-1"
                   style={{
                     height: 28,
                     background: preset,
@@ -233,6 +241,17 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
                       color.hex?.toLowerCase() === preset.toLowerCase()
                         ? "2px 2px 0 #C41E3A"
                         : "none",
+                    transition: "box-shadow 0.1s, transform 0.1s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (color.hex?.toLowerCase() === preset.toLowerCase()) return;
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "3px 3px 0 #1A1A1A";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translate(-1px, -1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (color.hex?.toLowerCase() === preset.toLowerCase()) return;
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "none";
                   }}
                 />
               ))}
@@ -247,7 +266,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
               padding: "14px",
             }}
           >
-            <span className="font-label block mb-3" style={{ color: "#7A7A7A" }}>
+            <span className="font-pixel block mb-3" style={{ color: "#7A7A7A" }}>
               PALETTE HISTORY
             </span>
             <div className="flex gap-2 flex-wrap">
@@ -325,12 +344,15 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
                 border: "1.5px solid #1A1A1A",
                 color: "#1A1A1A",
                 borderRadius: 2,
+                transition: "box-shadow 0.1s, transform 0.1s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#F0E9E0";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "3px 3px 0 #1A1A1A";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translate(-1px, -1px)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#FFFFFF";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+                (e.currentTarget as HTMLButtonElement).style.transform = "none";
               }}
             >
               초기화
@@ -347,6 +369,17 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
                 borderRadius: 2,
                 cursor: !canComplete ? "not-allowed" : "pointer",
                 boxShadow: canComplete ? "3px 3px 0 #8B0000" : "none",
+                transition: "box-shadow 0.1s, transform 0.1s",
+              }}
+              onMouseEnter={(e) => {
+                if (!canComplete) return;
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "5px 5px 0 #8B0000";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translate(-1px, -1px)";
+              }}
+              onMouseLeave={(e) => {
+                if (!canComplete) return;
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "3px 3px 0 #8B0000";
+                (e.currentTarget as HTMLButtonElement).style.transform = "none";
               }}
             >
               {isUploading ? "저장 중..." : "완성 →"}
@@ -359,14 +392,14 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
 
           {/* Templates Panel */}
           <div
-            className="font-maru"
+            className=""
             style={{
               background: "#FFFFFF",
               border: "1.5px solid #1A1A1A",
               padding: "14px",
             }}
           >
-            <span className="font-label block mb-3" style={{ color: "#1A1A1A" }}>
+            <span className="font-pixel block mb-3" style={{ color: "#1A1A1A" }}>
               TEMPLATES
             </span>
 
