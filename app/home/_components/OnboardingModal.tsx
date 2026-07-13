@@ -2,7 +2,7 @@
 
 import { useStitch } from "@/app/src/providers/StitchProvider";
 import { GAME_MODE, GameMode } from "@/app/src/types/crossTitch";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const ONBOARDING_KEY = (mode: GameMode) => `crossstitch-onboarded-${mode}`;
 
@@ -20,16 +20,20 @@ const normalSteps = [
 
 export default function OnboardingModal() {
   const { mode } = useStitch();
-  const [show, setShow] = useState(false);
   const [step, setStep] = useState(0);
+  const [seenModes, setSeenModes] = useState<Set<GameMode>>(() => {
+    if (typeof window === "undefined") return new Set();
+    const seen = new Set<GameMode>();
+    if (localStorage.getItem(ONBOARDING_KEY(GAME_MODE.NORMAL))) seen.add(GAME_MODE.NORMAL);
+    if (localStorage.getItem(ONBOARDING_KEY(GAME_MODE.CHALLENGE))) seen.add(GAME_MODE.CHALLENGE);
+    return seen;
+  });
 
-  useEffect(() => {
-    if (!localStorage.getItem(ONBOARDING_KEY(mode))) setShow(true);
-  }, [mode]);
+  const show = !seenModes.has(mode);
 
   const handleClose = () => {
     localStorage.setItem(ONBOARDING_KEY(mode), "true");
-    setShow(false);
+    setSeenModes((prev) => new Set([...prev, mode]));
   };
 
   if (!show) return null;
