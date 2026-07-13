@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches-ignore: [main]
   pull_request:
     branches: [main]
 
@@ -24,7 +23,7 @@ jobs:
       - run: npm ci
 
       - name: Auto-open PR
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref_name != 'main'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
