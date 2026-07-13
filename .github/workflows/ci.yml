@@ -9,6 +9,10 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,8 +23,58 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run lint
+      - name: Lint
+        id: lint
+        run: npm run lint 2>&1 | tee lint-output.txt
+        continue-on-error: true
 
-      - run: npm run typecheck
+      - name: Type Check
+        id: typecheck
+        run: npm run typecheck 2>&1 | tee typecheck-output.txt
+        continue-on-error: true
 
-      - run: npm run test
+      - name: Test
+        id: test
+        run: npm run test 2>&1 | tee test-output.txt
+        continue-on-error: true
+
+      - name: Report & open PR on failure
+        if: steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPORT="## CI 실패 리포트\n\n"
+
+          if [ "${{ steps.lint.outcome }}" == "failure" ]; then
+            REPORT+="### ❌ Lint\n\`\`\`\n$(cat lint-output.txt)\n\`\`\`\n"
+            REPORT+="**힌트**: \`npm run lint:fix\` 로 자동 수정하거나 에러 위치를 직접 수정하세요.\n\n"
+          fi
+
+          if [ "${{ steps.typecheck.outcome }}" == "failure" ]; then
+            REPORT+="### ❌ TypeCheck\n\`\`\`\n$(cat typecheck-output.txt)\n\`\`\`\n"
+            REPORT+="**힌트**: \`npm run typecheck\` 로 로컬에서 확인 후 타입 오류를 수정하세요.\n\n"
+          fi
+
+          if [ "${{ steps.test.outcome }}" == "failure" ]; then
+            REPORT+="### ❌ Test\n\`\`\`\n$(cat test-output.txt)\n\`\`\`\n"
+            REPORT+="**힌트**: \`npm run test\` 로 실패한 테스트를 확인하고 로직 또는 테스트 케이스를 수정하세요.\n\n"
+          fi
+
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} --body "$(echo -e "$REPORT")"
+          else
+            BRANCH="fix/ci-${{ github.run_id }}"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b $BRANCH
+            git push origin $BRANCH
+            gh pr create \
+              --title "fix: CI 실패 — $(echo '${{ github.sha }}' | cut -c1-7)" \
+              --body "$(echo -e "$REPORT")" \
+              --base main \
+              --head $BRANCH
+          fi
+
+      - name: Fail CI
+        if: steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure'
+        run: exit 1
