@@ -20,7 +20,7 @@ describe("applyRandomRemovalCells", () => {
 
   it("removeCount만큼 셀을 제거한다", () => {
     const result = applyRandomRemovalCells(cells, 2);
-    expect(result).toHaveLength(999); // intentional failure for CI test
+    expect(result).toHaveLength(2);
   });
 
   it("removeCount가 0이면 원본 그대로 반환한다", () => {
