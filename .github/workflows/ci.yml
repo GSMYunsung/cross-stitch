@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -25,55 +24,79 @@ jobs:
 
       - name: Lint
         id: lint
-        run: npm run lint 2>&1 | tee lint-output.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run lint 2>&1 | tee lint-output.txt
         continue-on-error: true
 
       - name: Type Check
         id: typecheck
-        run: npm run typecheck 2>&1 | tee typecheck-output.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run typecheck 2>&1 | tee typecheck-output.txt
         continue-on-error: true
 
       - name: Test
         id: test
-        run: npm run test 2>&1 | tee test-output.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test 2>&1 | tee test-output.txt
         continue-on-error: true
 
-      - name: Report & open PR on failure
+      - name: Build failure report
+        id: report
         if: steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT="## CI 실패 리포트\n\n"
-
+          REPORT=""
           if [ "${{ steps.lint.outcome }}" == "failure" ]; then
             REPORT+="### ❌ Lint\n\`\`\`\n$(cat lint-output.txt)\n\`\`\`\n"
             REPORT+="**힌트**: \`npm run lint:fix\` 로 자동 수정하거나 에러 위치를 직접 수정하세요.\n\n"
           fi
-
           if [ "${{ steps.typecheck.outcome }}" == "failure" ]; then
             REPORT+="### ❌ TypeCheck\n\`\`\`\n$(cat typecheck-output.txt)\n\`\`\`\n"
             REPORT+="**힌트**: \`npm run typecheck\` 로 로컬에서 확인 후 타입 오류를 수정하세요.\n\n"
           fi
-
           if [ "${{ steps.test.outcome }}" == "failure" ]; then
             REPORT+="### ❌ Test\n\`\`\`\n$(cat test-output.txt)\n\`\`\`\n"
             REPORT+="**힌트**: \`npm run test\` 로 실패한 테스트를 확인하고 로직 또는 테스트 케이스를 수정하세요.\n\n"
           fi
+          echo "body=## CI 실패 리포트\n\n$REPORT" >> $GITHUB_OUTPUT
 
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            gh pr comment ${{ github.event.pull_request.number }} --body "$(echo -e "$REPORT")"
+      - name: Report failure (non-main)
+        if: (steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure') && github.ref_name != 'main' && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BODY="$(echo -e "${{ steps.report.outputs.body }}")"
+          PR_NUMBER=$(gh pr list --head "${{ github.ref_name }}" --base main --json number --jq '.[0].number')
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr comment "$PR_NUMBER" --body "$BODY"
           else
-            BRANCH="fix/ci-${{ github.run_id }}"
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git checkout -b $BRANCH
-            git push origin $BRANCH
             gh pr create \
-              --title "fix: CI 실패 — $(echo '${{ github.sha }}' | cut -c1-7)" \
-              --body "$(echo -e "$REPORT")" \
+              --title "fix: CI 실패 — ${{ github.ref_name }}" \
+              --body "$BODY" \
               --base main \
-              --head $BRANCH
+              --head "${{ github.ref_name }}"
           fi
+
+      - name: Report failure (main)
+        if: (steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure') && github.ref_name == 'main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="fix/ci-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b $BRANCH
+          git push origin $BRANCH
+          gh pr create \
+            --title "fix: CI 실패 — $(echo '${{ github.sha }}' | cut -c1-7)" \
+            --body "$(echo -e "${{ steps.report.outputs.body }}")" \
+            --base main \
+            --head $BRANCH
 
       - name: Fail CI
         if: steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure'
