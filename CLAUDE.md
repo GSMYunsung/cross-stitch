@@ -19,4 +19,8 @@
 - 작업 시작 전 반드시 새 브랜치 생성
 - PR은 CI 통과 후 머지
 - 머지 후 브랜치는 자동 삭제됨
+- **PR 머지 확인 후 반드시 로컬 main 동기화**:
+  ```
+  git checkout main && git pull origin main
+  ```
 - PR Conversation 작성시에는 md 형식 사용
