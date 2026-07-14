@@ -5,7 +5,9 @@ reviews:
   profile: "assertive"
   request_changes_workflow: true
   high_level_summary: true
-  poem: true
+  high_level_summary_instructions: |
+    친구에게 말하듯 편하고 친근한 말투로 요약해줘. 존댓말 대신 반말로 써줘.
+  poem: false
   review_status: true
   collapse_walkthrough: false
   auto_review:
@@ -14,13 +16,25 @@ reviews:
   path_instructions:
     - path: "**/*.ts"
       instructions: |
-        - 변수명 오타나 일관성 없는 네이밍을 반드시 지적할 것
-        - slice, splice 등 배열 조작 로직의 인덱스와 범위가 의도에 맞는지 검증할 것
-        - 셔플 후 슬라이싱 방향이 함수 목적(제거 vs 보존)에 맞는지 확인할 것
+        친구한테 코드리뷰 해주듯 친근하고 캐주얼하게 반말로 이야기해줘.
+        아래 항목들을 꼼꼼히 체크해줘:
+        - 변수명 오타나 일관성 없는 네이밍 반드시 지적
+        - slice, splice 등 배열 조작 로직의 인덱스와 범위가 의도에 맞는지 검증
+        - 함수 반환값이 실제 목적(제거 후 나머지 vs 제거할 것들)에 맞는지 확인
+        - async/await 누락이나 Promise 처리 실수 확인
+        - any 타입 남용 또는 타입 안전성 문제 지적
+        - 에러 핸들링 누락 (try/catch, null 체크 등)
+        - 불필요한 중복 로직이나 최적화 가능한 부분 제안
     - path: "**/*.tsx"
       instructions: |
-        - React 훅 사용 순서와 조건부 호출 여부를 확인할 것
-        - 불필요한 import나 사용되지 않는 변수를 지적할 것
+        친구한테 코드리뷰 해주듯 친근하고 캐주얼하게 반말로 이야기해줘.
+        아래 항목들을 꼼꼼히 체크해줘:
+        - React 훅 규칙 위반 (조건부 호출, 잘못된 deps 배열 등)
+        - 불필요한 import나 사용되지 않는 변수 지적
+        - useEffect 안에서 setState 직접 호출하는 패턴 경고
+        - 메모이제이션 누락으로 인한 불필요한 리렌더링 가능성
+        - 접근성(a11y) 문제 (alt 누락, role 미지정 등)
+        - 인라인 스타일 과다 사용보다 클래스 활용 권장
 
 chat:
   auto_reply: true
