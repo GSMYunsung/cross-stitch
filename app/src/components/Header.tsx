@@ -1,17 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthInfo } from "../providers/AuthProvider";
-import { DEFAULT_MODE_CONFIG, MODE_MAP } from "../config/modes";
+import { MODE_MAP } from "../config/modes";
 
 export default function Header() {
   const { user, commitInfo, savedGridData, authInfoReset, effectiveCommitCount } = useAuthInfo();
   const { githubogout } = useAuth();
   const router = useRouter();
 
-  if (!user) return null;
+  const pathname = usePathname();
+  if (!user || pathname === "/login") return null;
 
   const currentMode = savedGridData?.mode;
   const modeCfg = (currentMode && MODE_MAP[currentMode]) ?? null;
