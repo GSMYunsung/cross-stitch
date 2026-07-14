@@ -57,7 +57,7 @@ GitHub 프로필 README를 꾸미고 싶어도 막막한 경우가 많다.
   │  /api/cron/update        → 매달 1일 크론 잡 (셀 자동 제거)
   ▼
 🗄️ Firebase Firestore
-  │  grids/{uid} — 그리드 데이터 (완성 버튼 누를 때만 저장)
+  │  grids/{uid} — 최초 로그인 시 빈 문서 생성, 모드 선택·완성 버튼 시 갱신
   ▼
 🎨 html-to-image
   │  그리드 DOM 요소 → PNG 변환
@@ -98,13 +98,13 @@ GitHub 프로필 README를 꾸미고 싶어도 막막한 경우가 많다.
 ![CrossStitch](https://your-domain.vercel.app/api/readme-card/{uid})
 ```
 
-카드에는 픽셀 아트와 함께 GitHub 통계(공개 레포, 팔로워, PR 수, 이슈 수)가 실시간으로 표시된다.
+카드에는 픽셀 아트와 함께 GitHub 통계(공개 레포, 팔로워, PR 수, 이슈 수)가 표시된다. (최대 1시간 캐시)
 
 ---
 
 ## CI/CD
 
-```
+```text
 git push (브랜치)
   ↓
 GitHub Actions CI 실행
@@ -262,9 +262,11 @@ cross-stitch/
 {
   checkedCells: { r: number; c: number; color: string }[];
   commitCount: number;
-  mode: "normal" | "challenge";
-  githubUsername: string;
-  savedAt: Timestamp;
+  updatedAt: string;      // ISO 8601
+  firstLoginAt: string;   // ISO 8601, 최초 로그인 시 기록
+  mode?: "normal" | "challenge";
+  githubUsername?: string;
+  wasReset?: boolean;
 }
 ```
 

@@ -5,7 +5,8 @@
 기능 개발 시 항상 아래 flow를 따를 것:
 
 1. **새 브랜치 생성**: `feat/`, `fix/`, `chore/` 등 prefix 사용
-   ```
+
+   ```bash
    git checkout -b feat/기능명
    ```
 2. **작업 후 커밋 & 푸쉬**
@@ -20,7 +21,9 @@
 - PR은 CI 통과 후 머지
 - 머지 후 브랜치는 자동 삭제됨
 - **PR 머지 확인 후 반드시 로컬 main 동기화**:
-  ```
+
+  ```bash
   git checkout main && git pull origin main
   ```
+
 - PR Conversation 작성시에는 md 형식 사용
