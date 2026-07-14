@@ -6,6 +6,11 @@ import { useAuth } from "../hooks/useAuth";
 import { useAuthInfo } from "../providers/AuthProvider";
 import { MODE_MAP } from "../config/modes";
 
+/**
+ * Renders the authenticated user's application header.
+ *
+ * @returns The header interface for authenticated users, or `null` on the login route or without a user.
+ */
 export default function Header() {
   const { user, commitInfo, savedGridData, authInfoReset, effectiveCommitCount } = useAuthInfo();
   const { githubogout } = useAuth();
