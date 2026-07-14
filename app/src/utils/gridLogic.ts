@@ -42,12 +42,12 @@ export function applyRandomRemovalCells(
   removeCount: number,
 ): CheckedCell[] {
   if (removeCount <= 0 || cells.length === 0) return cells;
-  const shuffled = [...cells];
-  for (let i = shuffled.length - 1; i > 0; i--) {
+  const suffled = [...cells];
+  for (let i = suffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [suffled[i], suffled[j]] = [suffled[j], suffled[i]];
   }
-  return shuffled.slice(removeCount);
+  return suffled.slice(0, removeCount);
 }
 
 // 30% 드롭 여부 (크론 기준: savedCount >= 10)
