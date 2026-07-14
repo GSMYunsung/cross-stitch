@@ -1,8 +1,9 @@
-language: "ko-KR" # 한국말로 설정
+language: "ko-KR"
 early_access: false
+
 reviews:
-  profile: "chill" # 리뷰 너무 빡세게는 안한다는 뜻
-  request_changes_workflow: true # 코드래빗이 리뷰 끝나면 알아서 PR 승인하게끔
+  profile: "assertive"
+  request_changes_workflow: true
   high_level_summary: true
   poem: true
   review_status: true
@@ -10,5 +11,16 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
+  path_instructions:
+    - path: "**/*.ts"
+      instructions: |
+        - 변수명 오타나 일관성 없는 네이밍을 반드시 지적할 것
+        - slice, splice 등 배열 조작 로직의 인덱스와 범위가 의도에 맞는지 검증할 것
+        - 셔플 후 슬라이싱 방향이 함수 목적(제거 vs 보존)에 맞는지 확인할 것
+    - path: "**/*.tsx"
+      instructions: |
+        - React 훅 사용 순서와 조건부 호출 여부를 확인할 것
+        - 불필요한 import나 사용되지 않는 변수를 지적할 것
+
 chat:
   auto_reply: true
