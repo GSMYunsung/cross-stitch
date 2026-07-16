@@ -125,4 +125,20 @@ describe("BackPressHandler — 로그인→홈 시나리오", () => {
     expect(pushStateSpy).toHaveBeenCalledTimes(2);
     expect(pushStateSpy).toHaveBeenLastCalledWith(null, "", window.location.href);
   });
+
+  it("history.back() 호출 시에도 뒤로가기가 차단된다", () => {
+    // jsdom의 history.back()은 popstate를 발생시키지 않는 알려진 제한이 있다.
+    // 실제 브라우저에서 back()이 트리거하는 popstate를 수동으로 함께 발생시켜
+    // 컴포넌트가 이를 차단하는지 검증한다.
+    ({ unmount } = render(<BackPressHandler />));
+    pushStateSpy.mockClear();
+
+    act(() => {
+      window.history.back();
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+    expect(pushStateSpy).toHaveBeenCalledOnce();
+    expect(pushStateSpy).toHaveBeenCalledWith(null, "", window.location.href);
+  });
 });
