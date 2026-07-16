@@ -79,6 +79,6 @@ export function deriveHomeState({
 export function isHeaderVisible(
   user: { uid: string } | null,
   pathname: string,
-): boolean {
+): user is { uid: string } {
   return !!user && pathname !== "/login";
 }
