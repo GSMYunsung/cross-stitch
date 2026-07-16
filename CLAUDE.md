@@ -8,6 +8,7 @@
    ```
    git checkout -b feat/기능명
    ```
+
 2. **작업 후 커밋 & 푸쉬**
 3. **PR 생성**: `gh pr create --base main --head 브랜치명`
 4. **CI 통과 확인** (lint → typecheck → test)
@@ -23,4 +24,5 @@
   ```
   git checkout main && git pull origin main
   ```
+- 테스트를 추가할 때마다 기존 CI/CD 절차에 자동으로 포함시킬 것 (`npm run test` 스크립트 범위 안에 있으면 별도 설정 불필요)
 - PR Conversation 작성시에는 md 형식 사용
