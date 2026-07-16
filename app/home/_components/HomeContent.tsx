@@ -62,7 +62,6 @@ export default function HomeContent() {
     waitingForMode,
     showResetModal,
     showNoCommits,
-    isResetThreshold,
   } = deriveHomeState({
     isGridLoaded,
     savedGridData,
