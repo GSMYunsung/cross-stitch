@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthInfo } from "../providers/AuthProvider";
 import { MODE_MAP } from "../config/modes";
+import { isHeaderVisible } from "../utils/homeState";
 
 /**
  * Renders the authenticated user's application header.
@@ -17,7 +18,7 @@ export default function Header() {
   const router = useRouter();
 
   const pathname = usePathname();
-  if (!user || pathname === "/login") return null;
+  if (!isHeaderVisible(user, pathname)) return null;
 
   const currentMode = savedGridData?.mode;
   const modeCfg = (currentMode && MODE_MAP[currentMode]) ?? null;
