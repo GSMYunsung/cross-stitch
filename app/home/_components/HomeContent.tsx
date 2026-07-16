@@ -5,10 +5,8 @@ import { clearResetFlag } from "@/app/src/hooks/useGridPersistence";
 import { useAuthInfo } from "@/app/src/providers/AuthProvider";
 import { StitchProvider } from "@/app/src/providers/StitchProvider";
 import { GAME_MODE, GameMode } from "@/app/src/types/crossTitch";
-import {
-  applyRandomRemovalGrid as applyRandomRemoval,
-  isDroppedBelowThreshold,
-} from "@/app/src/utils/gridLogic";
+import { applyRandomRemovalGrid as applyRandomRemoval } from "@/app/src/utils/gridLogic";
+import { deriveHomeState } from "@/app/src/utils/homeState";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -54,27 +52,26 @@ export default function HomeContent() {
     setRestoreChoice("fresh");
   };
 
-  const hasActualStitches = savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false;
-  const hasSavedGrid = isGridLoaded && savedGridData !== null && hasActualStitches;
-  const savedCount = savedGridData?.commitCount ?? 0;
   const currentCount = commitInfo?.total_count ?? 0;
-  const isResetThreshold =
-    savedGridData?.mode !== GAME_MODE.NORMAL && isDroppedBelowThreshold(savedCount, currentCount);
-  const waitingForChoice =
-    hasSavedGrid && restoreChoice === null && !savedGridData?.wasReset;
 
-  const effectiveMode: GameMode | null = (() => {
-    if (restoreChoice === "restore") return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
-    if (savedGridData?.wasReset) return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
-    if (isResetThreshold && hasSavedGrid) return savedGridData!.mode ?? GAME_MODE.CHALLENGE;
-    if (restoreChoice === "fresh") return modeChoice;
-    // mode가 명시적으로 저장된 경우에만 사용, undefined면 선택 대기
-    if (savedGridData?.mode !== undefined) return savedGridData.mode;
-    return modeChoice;
-  })();
-
-  const waitingForMode = effectiveMode === null && !waitingForChoice && !savedGridData?.wasReset;
-  const showResetModal = !!(savedGridData?.wasReset && !resetDismissed);
+  const {
+    hasSavedGrid,
+    waitingForChoice,
+    effectiveMode,
+    shouldRestore,
+    waitingForMode,
+    showResetModal,
+    showNoCommits,
+    isResetThreshold,
+  } = deriveHomeState({
+    isGridLoaded,
+    savedGridData,
+    restoreChoice,
+    modeChoice,
+    currentCommitCount: currentCount,
+    effectiveCommitCount,
+    resetDismissed,
+  });
 
   const handleResetModalClose = () => {
     setResetDismissed(true);
@@ -88,7 +85,6 @@ export default function HomeContent() {
     getDownloadURL(imageRef).then(setSavedImageUrl).catch(() => setSavedImageUrl(null));
   }, [hasSavedGrid, user?.uid]);
 
-  const shouldRestore = restoreChoice === "restore" || (isResetThreshold && hasSavedGrid);
   const { adjustedGrid, wasAdjusted } = useMemo(() => {
     if (!savedGridData || !shouldRestore) return { adjustedGrid: undefined, wasAdjusted: false };
     if (savedGridData.mode === GAME_MODE.NORMAL) return { adjustedGrid: savedGridData.gridState, wasAdjusted: false };
@@ -213,7 +209,7 @@ export default function HomeContent() {
   }
 
   /* ── 커밋 0개 빈 상태 ── */
-  if (effectiveMode === GAME_MODE.CHALLENGE && effectiveCommitCount === 0 && !shouldRestore) {
+  if (showNoCommits) {
     return (
       <div
         className="flex flex-1 items-center justify-center p-4"
@@ -263,14 +259,14 @@ export default function HomeContent() {
   return (
     <>
       <WelcomeModal
-        isOpen={waitingForMode && !hasActualStitches && !welcomeDismissed}
+        isOpen={waitingForMode && !hasSavedGrid && !welcomeDismissed}
         onStart={() => {
           localStorage.setItem("crossstitch-welcome-seen", "true");
           setWelcomeDismissed(true);
         }}
       />
       <ModeSelectionModal
-        isOpen={(waitingForMode && (hasActualStitches || welcomeDismissed)) || showModeChange}
+        isOpen={(waitingForMode && (hasSavedGrid || welcomeDismissed)) || showModeChange}
         onSelect={showModeChange ? handleModeChange : handleModeSelect}
       />
       {effectiveMode !== null && (

@@ -11,25 +11,26 @@ import BackPressHandler from "../app/src/components/BackPressHandler";
 
 describe("BackPressHandler — 마운트 동작", () => {
   let pushStateSpy: ReturnType<typeof vi.spyOn>;
+  let unmount: () => void;
 
   beforeEach(() => {
     pushStateSpy = vi.spyOn(window.history, "pushState");
   });
 
   afterEach(() => {
+    unmount?.();
     pushStateSpy.mockRestore();
   });
 
   it("마운트 즉시 history.pushState를 호출해 현재 URL을 스택에 쌓는다", () => {
-    const { unmount } = render(<BackPressHandler />);
+    ({ unmount } = render(<BackPressHandler />));
 
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(pushStateSpy).toHaveBeenCalledWith(null, "", window.location.href);
-    unmount();
   });
 
   it("popstate 이벤트(뒤로가기 시도) 발생 시 pushState를 재호출해 이동을 차단한다", () => {
-    const { unmount } = render(<BackPressHandler />);
+    ({ unmount } = render(<BackPressHandler />));
     pushStateSpy.mockClear();
 
     act(() => {
@@ -38,11 +39,10 @@ describe("BackPressHandler — 마운트 동작", () => {
 
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(pushStateSpy).toHaveBeenCalledWith(null, "", window.location.href);
-    unmount();
   });
 
   it("뒤로가기를 여러 번 시도해도 매번 차단된다", () => {
-    const { unmount } = render(<BackPressHandler />);
+    ({ unmount } = render(<BackPressHandler />));
     pushStateSpy.mockClear();
 
     act(() => {
@@ -52,23 +52,24 @@ describe("BackPressHandler — 마운트 동작", () => {
     });
 
     expect(pushStateSpy).toHaveBeenCalledTimes(3);
-    unmount();
   });
 });
 
 describe("BackPressHandler — 언마운트(cleanup) 동작", () => {
   let pushStateSpy: ReturnType<typeof vi.spyOn>;
+  let unmount: () => void;
 
   beforeEach(() => {
     pushStateSpy = vi.spyOn(window.history, "pushState");
   });
 
   afterEach(() => {
+    unmount?.();
     pushStateSpy.mockRestore();
   });
 
   it("언마운트 후에는 popstate가 발생해도 pushState를 호출하지 않는다", () => {
-    const { unmount } = render(<BackPressHandler />);
+    ({ unmount } = render(<BackPressHandler />));
     unmount(); // useEffect cleanup → 리스너 제거
     pushStateSpy.mockClear();
 
@@ -80,10 +81,12 @@ describe("BackPressHandler — 언마운트(cleanup) 동작", () => {
   });
 
   it("마운트 → 언마운트 → 재마운트해도 리스너가 누적되지 않는다", () => {
+    // 첫 번째 마운트/언마운트
     const { unmount: unmount1 } = render(<BackPressHandler />);
     unmount1();
 
-    const { unmount: unmount2 } = render(<BackPressHandler />);
+    // 두 번째 마운트 — afterEach가 정리
+    ({ unmount } = render(<BackPressHandler />));
     pushStateSpy.mockClear();
 
     act(() => {
@@ -92,24 +95,25 @@ describe("BackPressHandler — 언마운트(cleanup) 동작", () => {
 
     // 리스너가 누적됐다면 2번 이상 호출됨
     expect(pushStateSpy).toHaveBeenCalledOnce();
-    unmount2();
   });
 });
 
 describe("BackPressHandler — 로그인→홈 시나리오", () => {
   let pushStateSpy: ReturnType<typeof vi.spyOn>;
+  let unmount: () => void;
 
   beforeEach(() => {
     pushStateSpy = vi.spyOn(window.history, "pushState");
   });
 
   afterEach(() => {
+    unmount?.();
     pushStateSpy.mockRestore();
   });
 
   it("홈 진입 후 뒤로가기를 눌러도 로그인 화면으로 이동하지 않는다", () => {
     // 1. 홈 화면 진입 — BackPressHandler 마운트
-    const { unmount } = render(<BackPressHandler />);
+    ({ unmount } = render(<BackPressHandler />));
     expect(pushStateSpy).toHaveBeenCalledTimes(1);
 
     // 2. 유저가 뒤로가기 버튼 누름
@@ -120,7 +124,5 @@ describe("BackPressHandler — 로그인→홈 시나리오", () => {
     // 3. pushState 재호출로 현재 페이지 유지
     expect(pushStateSpy).toHaveBeenCalledTimes(2);
     expect(pushStateSpy).toHaveBeenLastCalledWith(null, "", window.location.href);
-
-    unmount();
   });
 });
