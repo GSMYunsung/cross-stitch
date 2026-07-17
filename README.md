@@ -95,7 +95,7 @@ GitHub 프로필 README를 꾸미고 싶어도 막막한 경우가 많다.
 완성 후 생성되는 마크다운 코드를 GitHub README에 붙여넣으면 아래와 같이 표시된다:
 
 ```markdown
-![CrossStitch](https://your-domain.vercel.app/api/readme-card/{uid})
+![CrossStitch](www.gitcrossstitch.site/api/readme-card/{uid})
 ```
 
 카드에는 픽셀 아트와 함께 GitHub 통계(공개 레포, 팔로워, PR 수, 이슈 수)가 표시된다. (최대 1시간 캐시)
