@@ -152,3 +152,32 @@ export const MODE_MAP = Object.fromEntries(
 
 **효과**  
 새 모드 추가 시 `MODE_LIST`에 항목 하나만 추가하면 전체 UI에 자동 반영. `ModeCardConfig` 필드 누락 시 컴파일 에러로 즉시 감지 가능.
+
+---
+
+## 6. Vercel 자동 배포가 멈춤 (GitHub 네이티브 연동 불안정)
+
+**증상**  
+PR을 머지해도 Vercel 대시보드의 배포가 이전 커밋에 고정된 채 갱신되지 않음.
+
+**원인**  
+Vercel의 GitHub 네이티브 연동(Webhook)은 간헐적으로 트리거가 누락됨. CI 통과 여부와 무관하게 배포되는 문제도 있음.
+
+**해결**  
+`ci.yml`에 `deploy` job을 명시적으로 추가. CI(`lint` → `typecheck` → `test`) 전체가 통과한 후에만 `main` 브랜치 push 시 Vercel 배포가 실행됨.
+
+```
+push to main → CI job → (통과 시) deploy job → Vercel 프로덕션 배포
+```
+
+**최초 1회 설정 필요 — GitHub Secrets 3개 등록**
+
+GitHub 레포 → Settings → Secrets and variables → Actions → New repository secret:
+
+| Secret 이름 | 값 출처 |
+|---|---|
+| `VERCEL_TOKEN` | Vercel → Account Settings → Tokens → Create |
+| `VERCEL_ORG_ID` | `.vercel/project.json`의 `orgId` |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json`의 `projectId` |
+
+> `.vercel/project.json`은 로컬에서 `npx vercel link` 실행 후 생성됨. `.gitignore`에 포함되어 있으므로 커밋하지 말 것.
