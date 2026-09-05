@@ -1,7 +1,7 @@
 "use client";
 
 import BackPressHandler from "@/app/src/components/BackPressHandler";
-import { clearResetFlag, loadLocalTempGrid, saveMode } from "@/app/src/hooks/useGridPersistence";
+import { clearResetFlag, clearTempGrid, loadLocalTempGrid, saveMode } from "@/app/src/hooks/useGridPersistence";
 import { useAuthInfo } from "@/app/src/providers/AuthProvider";
 import { StitchProvider } from "@/app/src/providers/StitchProvider";
 import { GAME_MODE, GameMode, StitchCell } from "@/app/src/types/crossTitch";
@@ -73,6 +73,8 @@ export default function HomeContent() {
   };
 
   const handleFreshStart = () => {
+    if (user?.uid) clearTempGrid(user.uid);
+    setClient((prev) => ({ ...prev, localTempGridState: undefined, localTempMode: undefined, localTempCommitCount: 0 }));
     setRestoreChoice("fresh");
   };
 
