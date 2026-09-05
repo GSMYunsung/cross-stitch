@@ -46,8 +46,9 @@ export function deriveHomeState({
     savedGridData?.mode !== GAME_MODE.NORMAL &&
     isDroppedBelowThreshold(savedCount, currentCommitCount);
 
+  // 완성 그리드 또는 임시저장이 있으면 선택 모달 표시
   const waitingForChoice =
-    hasSavedGrid && restoreChoice === null && !savedGridData?.wasReset;
+    (hasSavedGrid || hasTempGrid) && restoreChoice === null && !savedGridData?.wasReset;
 
   const effectiveMode: GameMode | null = (() => {
     if (restoreChoice === "restore") return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
@@ -58,10 +59,7 @@ export function deriveHomeState({
     return modeChoice;
   })();
 
-  // 임시저장이 있고 완성된 그리드가 없으면 자동으로 임시저장 복원
-  const shouldAutoRestoreTemp = hasTempGrid && !hasSavedGrid && restoreChoice === null;
-  const shouldRestore =
-    restoreChoice === "restore" || (isResetThreshold && hasSavedGrid) || shouldAutoRestoreTemp;
+  const shouldRestore = restoreChoice === "restore" || (isResetThreshold && hasSavedGrid);
 
   const waitingForMode =
     effectiveMode === null && !waitingForChoice && !savedGridData?.wasReset;

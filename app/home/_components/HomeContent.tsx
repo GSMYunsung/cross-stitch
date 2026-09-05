@@ -207,17 +207,11 @@ export default function HomeContent() {
 
           <div className="px-4 pt-3 pb-1">
             <p className="font-label text-[9px]" style={{ color: "#7A7A7A" }}>
-              {checkedCount} CELLS FILLED ·{" "}
-              {new Date(savedGridData!.updatedAt).toLocaleDateString("ko-KR", {
-                month: "long",
-                day: "numeric",
-              })}
+              {checkedCount} CELLS FILLED
+              {hasTempGrid
+                ? <span style={{ color: "#C9971A" }}> · 임시저장</span>
+                : ` · ${new Date(savedGridData!.updatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" })}`}
             </p>
-            {hasTempGrid && (
-              <p className="font-label text-[9px] mt-1" style={{ color: "#C9971A" }}>
-                임시저장된 작업이 있어요 — 불러오기 시 임시저장 기준으로 복원됩니다
-              </p>
-            )}
           </div>
 
           <div className="flex gap-2 p-4">
