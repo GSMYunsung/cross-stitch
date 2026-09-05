@@ -168,7 +168,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
     if (!user?.uid) return;
     setIsTempSaving(true);
     try {
-      await saveTempGrid(user.uid, gridState, commitInfo?.total_count ?? 0);
+      await saveTempGrid(user.uid, gridState, commitInfo?.total_count ?? 0, mode);
       setTempSaved(true);
       setTimeout(() => setTempSaved(false), 2000);
     } catch (error) {

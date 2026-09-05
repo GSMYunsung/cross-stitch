@@ -31,6 +31,7 @@ export default function HomeContent() {
   const [isClientReady, setIsClientReady] = useState(false);
   const [localTempGridState, setLocalTempGridState] = useState<StitchCell[][] | undefined>(undefined);
   const [localTempCommitCount, setLocalTempCommitCount] = useState(0);
+  const [localTempMode, setLocalTempMode] = useState<GameMode | undefined>(undefined);
 
   useEffect(() => {
     setModeChoice(localStorage.getItem("crossstitch-mode") as GameMode | null);
@@ -39,6 +40,7 @@ export default function HomeContent() {
     if (local) {
       setLocalTempGridState(local.tempGridState);
       setLocalTempCommitCount(local.tempCommitCount);
+      setLocalTempMode(local.tempMode);
     }
     setIsClientReady(true);
   }, []);
@@ -88,6 +90,7 @@ export default function HomeContent() {
     effectiveCommitCount,
     resetDismissed,
     localTempGridState,
+    localTempMode,
   });
 
   const handleResetModalClose = () => {
@@ -143,7 +146,10 @@ export default function HomeContent() {
     const completedCheckedCount = savedGridData?.gridState.flat().filter((c) => c.isChecked).length ?? 0;
     const tempCheckedCount = effectiveTempGrid?.flat().filter((c) => c.isChecked).length ?? 0;
     const checkedCount = hasTempGrid ? tempCheckedCount : completedCheckedCount;
-    const savedMode = savedGridData?.mode;
+    // 임시저장이면 저장 당시 모드, 완성 그리드면 현재 모드
+    const displayMode = hasTempGrid
+      ? (savedGridData?.tempMode ?? localTempMode ?? savedGridData?.mode)
+      : savedGridData?.mode;
 
     return (
       <div
@@ -166,12 +172,12 @@ export default function HomeContent() {
             <span className="font-label text-[11px]" style={{ color: "#FFFFFF" }}>
               SAVED WORK FOUND
             </span>
-            {savedMode && (
+            {displayMode && (
               <span
                 className="font-label text-[9px] px-2 py-0.5"
-                style={{ background: savedMode === GAME_MODE.NORMAL ? "#3B9A3B" : "#C41E3A", color: "#fff" }}
+                style={{ background: displayMode === GAME_MODE.NORMAL ? "#3B9A3B" : "#C41E3A", color: "#fff" }}
               >
-                {savedMode === GAME_MODE.NORMAL ? "NORMAL" : "CHALLENGE"}
+                {displayMode === GAME_MODE.NORMAL ? "NORMAL" : "CHALLENGE"}
               </span>
             )}
           </div>

@@ -16,12 +16,13 @@ export interface SavedGridData {
   gridState: StitchCell[][];
   tempGridState?: StitchCell[][];
   tempCommitCount?: number;
+  tempMode?: GameMode;
   commitCount: number;
   updatedAt: string;
   firstLoginAt: string;
   githubUsername?: string;
   wasReset?: boolean;
-  mode?: GameMode; // Firestore에 저장된 경우에만 존재 (모드 미선택 = undefined)
+  mode?: GameMode;
 }
 
 const makeBlankGrid = (): StitchCell[][] =>
@@ -87,6 +88,7 @@ export const saveTempGrid = async (
   userId: string,
   gridState: StitchCell[][],
   commitCount: number,
+  mode: GameMode,
 ): Promise<void> => {
   const tempCheckedCells: CheckedCell[] = [];
   gridState.forEach((row, r) =>
@@ -100,12 +102,13 @@ export const saveTempGrid = async (
     {
       tempCheckedCells,
       tempCommitCount: commitCount,
+      tempMode: mode,
       tempUpdatedAt: new Date().toISOString(),
     },
     { merge: true },
   );
   if (typeof window !== "undefined") {
-    localStorage.setItem(LS_TEMP_KEY, JSON.stringify({ cells: tempCheckedCells, commitCount }));
+    localStorage.setItem(LS_TEMP_KEY, JSON.stringify({ cells: tempCheckedCells, commitCount, mode }));
   }
 };
 
@@ -117,18 +120,18 @@ export const clearTempGrid = async (userId: string): Promise<void> => {
   }
 };
 
-export const loadLocalTempGrid = (): { tempGridState: StitchCell[][]; tempCommitCount: number } | null => {
+export const loadLocalTempGrid = (): { tempGridState: StitchCell[][]; tempCommitCount: number; tempMode?: GameMode } | null => {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(LS_TEMP_KEY);
     if (!raw) return null;
-    const { cells, commitCount } = JSON.parse(raw) as { cells: CheckedCell[]; commitCount: number };
+    const { cells, commitCount, mode } = JSON.parse(raw) as { cells: CheckedCell[]; commitCount: number; mode?: GameMode };
     if (!cells || cells.length === 0) return null;
     const grid = makeBlankGrid();
     for (const { r, c, color } of cells) {
       grid[r][c] = { color, isChecked: true };
     }
-    return { tempGridState: grid, tempCommitCount: commitCount };
+    return { tempGridState: grid, tempCommitCount: commitCount, tempMode: mode };
   } catch {
     return null;
   }
@@ -164,6 +167,7 @@ export const loadGrid = async (
     gridState: grid,
     tempGridState,
     tempCommitCount: data.tempCommitCount ?? undefined,
+    tempMode: data.tempMode as GameMode | undefined,
     commitCount: data.commitCount ?? 0,
     updatedAt: data.updatedAt ?? "",
     firstLoginAt: data.firstLoginAt ?? data.updatedAt ?? "",

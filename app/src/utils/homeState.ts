@@ -14,6 +14,8 @@ export interface HomeStateInput {
   resetDismissed: boolean;
   /** localStorage에 저장된 임시저장 그리드 (Firestore 로드 실패 대비 백업) */
   localTempGridState?: StitchCell[][];
+  /** localStorage에 저장된 임시저장 모드 */
+  localTempMode?: GameMode;
 }
 
 export interface HomeStateResult {
@@ -37,6 +39,7 @@ export function deriveHomeState({
   effectiveCommitCount,
   resetDismissed,
   localTempGridState,
+  localTempMode,
 }: HomeStateInput): HomeStateResult {
   const hasActualStitches =
     savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false;
@@ -55,8 +58,14 @@ export function deriveHomeState({
   const waitingForChoice =
     (hasSavedGrid || hasTempGrid) && restoreChoice === null && !savedGridData?.wasReset;
 
+  const effectiveTempMode = savedGridData?.tempMode ?? localTempMode;
+
   const effectiveMode: GameMode | null = (() => {
-    if (restoreChoice === "restore") return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
+    if (restoreChoice === "restore") {
+      // 임시저장 복원 시 임시저장 당시 모드 우선, 없으면 현재 저장된 모드
+      if (hasTempGrid) return effectiveTempMode ?? savedGridData?.mode ?? GAME_MODE.CHALLENGE;
+      return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
+    }
     if (savedGridData?.wasReset) return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
     if (isResetThreshold && hasSavedGrid) return savedGridData!.mode ?? GAME_MODE.CHALLENGE;
     if (restoreChoice === "fresh") return savedGridData?.mode ?? modeChoice;
