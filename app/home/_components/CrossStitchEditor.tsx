@@ -9,7 +9,6 @@ import { useStitch } from "@/app/src/providers/StitchProvider";
 import { CROSSTITCH_DEFAULT_SELECT_COLOR } from "@/app/src/constant";
 import { GAME_MODE } from "@/app/src/types/crossTitch";
 import { Template, TEMPLATES, templateToGrid } from "@/app/src/data/templates";
-import { generateReadmeMarkdown } from "@/app/src/utils/string";
 import { useEffect, useRef, useState } from "react";
 import { ColorPicker, useColor } from "react-color-palette";
 import "react-color-palette/css";
@@ -135,7 +134,6 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
   const [isUploading, setIsUploading] = useState(false);
   const [isTempSaving, setIsTempSaving] = useState(false);
   const [tempSaved, setTempSaved] = useState(false);
-  const [isUrlCopied, setIsUrlCopied] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [showColorInputs, setShowColorInputs] = useState(false);
@@ -198,12 +196,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
     updateGridSate(templateToGrid(template.cells));
   };
 
-  const handleCopyUrl = () => {
-    if (!user?.uid) return;
-    navigator.clipboard.writeText(generateReadmeMarkdown(user.uid, window.location.origin));
-    setIsUrlCopied(true);
-    setTimeout(() => setIsUrlCopied(false), 2000);
-  };
+  const handleCopyUrl = () => setModal(true);
 
   const canComplete = hasCheckedItem() && !isUploading;
 
@@ -440,14 +433,13 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
               onClick={handleCopyUrl}
               className="font-label text-[10px] px-6 py-2 cursor-pointer transition-all"
               style={{
-                border: `1.5px solid ${isUrlCopied ? "#3B9A3B" : "#1A1A1A"}`,
-                background: isUrlCopied ? "#3B9A3B" : "#1A1A1A",
+                border: "1.5px solid #1A1A1A",
+                background: "#1A1A1A",
                 color: "#FFFFFF",
                 borderRadius: 2,
-                transition: "background 0.2s, border-color 0.2s",
               }}
             >
-              {isUrlCopied ? "✓ COPIED!" : "COPY SHARE URL"}
+              COPY SHARE URL
             </button>
           )}
         </div>
