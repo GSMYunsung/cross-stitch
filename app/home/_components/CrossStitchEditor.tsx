@@ -113,7 +113,7 @@ interface Props {
 export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeRequest }: Props) {
   const { handleUpload } = useFile();
   const { user } = useAuth();
-  const { commitInfo, effectiveCommitCount: commitLimit } = useAuthInfo();
+  const { commitInfo, effectiveCommitCount: commitLimit, savedGridData } = useAuthInfo();
   const {
     hasCheckedItem,
     updateSelectColor,
@@ -126,6 +126,10 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
   } = useStitch();
 
   const [modal, setModal] = useState(false);
+  // savedGridData는 마운트 시 1회 로드 — 이번 세션 완성도 즉시 반영하기 위해 로컬 플래그 병용
+  const [hasCompleted, setHasCompleted] = useState(false);
+  const hasCompletedGrid =
+    (savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false) || hasCompleted;
   const [color, setColor] = useColor(CROSSTITCH_DEFAULT_SELECT_COLOR);
   const [isUploading, setIsUploading] = useState(false);
   const [isTempSaving, setIsTempSaving] = useState(false);
@@ -156,6 +160,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
         handleUpload(user.uid).catch(console.error),
         clearTempGrid(user.uid),
       ]);
+      setHasCompleted(true);
       setModal(true);
     } catch (error) {
       console.error("저장 중 오류 발생:", error);
@@ -190,6 +195,8 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
     setSelectedTemplateId(template.id);
     updateGridSate(templateToGrid(template.cells));
   };
+
+  const handleCopyUrl = () => setModal(true);
 
   const canComplete = hasCheckedItem() && !isUploading;
 
@@ -420,6 +427,21 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
               {isUploading ? "저장 중..." : "완성 →"}
             </button>
           </div>
+
+          {hasCompletedGrid && (
+            <button
+              onClick={handleCopyUrl}
+              className="font-label text-[10px] px-6 py-2 cursor-pointer transition-all"
+              style={{
+                border: "1.5px solid #1A1A1A",
+                background: "#1A1A1A",
+                color: "#FFFFFF",
+                borderRadius: 2,
+              }}
+            >
+              COPY SHARE URL
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 flex-shrink-0 w-[250px] self-start sticky top-4">
@@ -525,6 +547,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
           >
             ⇄ 모드 변경
           </button>
+
         </div>
       </div>
 
