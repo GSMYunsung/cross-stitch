@@ -22,18 +22,19 @@ export default function HomeContent() {
   } = useAuthInfo();
 
   const [restoreChoice, setRestoreChoice] = useState<"restore" | "fresh" | null>(null);
-  const [modeChoice, setModeChoice] = useState<GameMode | null>(() => {
-    if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("crossstitch-mode") as GameMode | null;
-    return stored;
-  });
+  const [modeChoice, setModeChoice] = useState<GameMode | null>(null);
   const [savedImageUrl, setSavedImageUrl] = useState<string | null>(null);
   const [resetDismissed, setResetDismissed] = useState(false);
   const [showModeChange, setShowModeChange] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
-  const [welcomeDismissed, setWelcomeDismissed] = useState(
-    () => typeof window !== "undefined" && localStorage.getItem("crossstitch-welcome-seen") === "true"
-  );
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const [isClientReady, setIsClientReady] = useState(false);
+
+  useEffect(() => {
+    setModeChoice(localStorage.getItem("crossstitch-mode") as GameMode | null);
+    setWelcomeDismissed(localStorage.getItem("crossstitch-welcome-seen") === "true");
+    setIsClientReady(true);
+  }, []);
 
   const handleModeSelect = (mode: GameMode) => {
     updateMode(mode);
@@ -112,7 +113,7 @@ export default function HomeContent() {
   }, [savedGridData, commitInfo, shouldRestore, hasTempGrid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── 로딩 ── */
-  if (!isGridLoaded) {
+  if (!isGridLoaded || !isClientReady) {
     return (
       <div className="flex flex-1 items-center justify-center" style={{ background: "#F5EEE6" }}>
         <div className="flex flex-col items-center gap-3">
