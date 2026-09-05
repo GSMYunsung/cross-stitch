@@ -14,12 +14,15 @@ interface CheckedCell {
 
 export interface SavedGridData {
   gridState: StitchCell[][];
+  tempGridState?: StitchCell[][];
+  tempCommitCount?: number;
+  tempMode?: GameMode;
   commitCount: number;
   updatedAt: string;
   firstLoginAt: string;
   githubUsername?: string;
   wasReset?: boolean;
-  mode?: GameMode; // Firestore에 저장된 경우에만 존재 (모드 미선택 = undefined)
+  mode?: GameMode;
 }
 
 const makeBlankGrid = (): StitchCell[][] =>
@@ -79,6 +82,61 @@ export const clearResetFlag = async (userId: string): Promise<void> => {
   await setDoc(docRef, { wasReset: false }, { merge: true });
 };
 
+const LS_TEMP_KEY = "crossstitch-tempgrid";
+
+export const saveTempGrid = async (
+  userId: string,
+  gridState: StitchCell[][],
+  commitCount: number,
+  mode: GameMode,
+): Promise<void> => {
+  const tempCheckedCells: CheckedCell[] = [];
+  gridState.forEach((row, r) =>
+    row.forEach((cell, c) => {
+      if (cell.isChecked) tempCheckedCells.push({ r, c, color: cell.color });
+    }),
+  );
+  const docRef = doc(db, "grids", userId);
+  await setDoc(
+    docRef,
+    {
+      tempCheckedCells,
+      tempCommitCount: commitCount,
+      tempMode: mode,
+      tempUpdatedAt: new Date().toISOString(),
+    },
+    { merge: true },
+  );
+  if (typeof window !== "undefined") {
+    localStorage.setItem(LS_TEMP_KEY, JSON.stringify({ cells: tempCheckedCells, commitCount, mode }));
+  }
+};
+
+export const clearTempGrid = async (userId: string): Promise<void> => {
+  const docRef = doc(db, "grids", userId);
+  await setDoc(docRef, { tempCheckedCells: [], tempCommitCount: 0 }, { merge: true });
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(LS_TEMP_KEY);
+  }
+};
+
+export const loadLocalTempGrid = (): { tempGridState: StitchCell[][]; tempCommitCount: number; tempMode?: GameMode } | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LS_TEMP_KEY);
+    if (!raw) return null;
+    const { cells, commitCount, mode } = JSON.parse(raw) as { cells: CheckedCell[]; commitCount: number; mode?: GameMode };
+    if (!cells || cells.length === 0) return null;
+    const grid = makeBlankGrid();
+    for (const { r, c, color } of cells) {
+      grid[r][c] = { color, isChecked: true };
+    }
+    return { tempGridState: grid, tempCommitCount: commitCount, tempMode: mode };
+  } catch {
+    return null;
+  }
+};
+
 
 export const loadGrid = async (
   userId: string,
@@ -95,8 +153,21 @@ export const loadGrid = async (
     grid[r][c] = { color, isChecked: true };
   }
 
+  const tempCells = (data.tempCheckedCells ?? []) as CheckedCell[];
+  let tempGridState: StitchCell[][] | undefined;
+  if (tempCells.length > 0) {
+    const tempGrid = makeBlankGrid();
+    for (const { r, c, color } of tempCells) {
+      tempGrid[r][c] = { color, isChecked: true };
+    }
+    tempGridState = tempGrid;
+  }
+
   return {
     gridState: grid,
+    tempGridState,
+    tempCommitCount: data.tempCommitCount ?? undefined,
+    tempMode: data.tempMode as GameMode | undefined,
     commitCount: data.commitCount ?? 0,
     updatedAt: data.updatedAt ?? "",
     firstLoginAt: data.firstLoginAt ?? data.updatedAt ?? "",

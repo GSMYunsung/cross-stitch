@@ -1,5 +1,5 @@
 import type { SavedGridData } from "../hooks/useGridPersistence";
-import { GAME_MODE, GameMode } from "../types/crossTitch";
+import { GAME_MODE, GameMode, StitchCell } from "../types/crossTitch";
 import { isDroppedBelowThreshold } from "./gridLogic";
 
 export interface HomeStateInput {
@@ -12,10 +12,15 @@ export interface HomeStateInput {
   /** AuthProvider effectiveCommitCount — 0커밋 빈 상태 화면 표시에 사용 */
   effectiveCommitCount: number;
   resetDismissed: boolean;
+  /** localStorage에 저장된 임시저장 그리드 (Firestore 로드 실패 대비 백업) */
+  localTempGridState?: StitchCell[][];
+  /** localStorage에 저장된 임시저장 모드 */
+  localTempMode?: GameMode;
 }
 
 export interface HomeStateResult {
   hasSavedGrid: boolean;
+  hasTempGrid: boolean;
   waitingForChoice: boolean;
   effectiveMode: GameMode | null;
   shouldRestore: boolean;
@@ -33,29 +38,43 @@ export function deriveHomeState({
   currentCommitCount,
   effectiveCommitCount,
   resetDismissed,
+  localTempGridState,
+  localTempMode,
 }: HomeStateInput): HomeStateResult {
   const hasActualStitches =
     savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false;
   const hasSavedGrid = isGridLoaded && savedGridData !== null && hasActualStitches;
+
+  const effectiveTempGrid: StitchCell[][] | undefined =
+    savedGridData?.tempGridState ?? localTempGridState;
+  const hasTempGrid = !!(effectiveTempGrid?.flat().some((c) => c.isChecked));
 
   const savedCount = savedGridData?.commitCount ?? 0;
   const isResetThreshold =
     savedGridData?.mode !== GAME_MODE.NORMAL &&
     isDroppedBelowThreshold(savedCount, currentCommitCount);
 
+  // 완성 그리드 또는 임시저장이 있으면 선택 모달 표시
   const waitingForChoice =
-    hasSavedGrid && restoreChoice === null && !savedGridData?.wasReset;
+    (hasSavedGrid || hasTempGrid) && restoreChoice === null && !savedGridData?.wasReset;
+
+  const effectiveTempMode = savedGridData?.tempMode ?? localTempMode;
 
   const effectiveMode: GameMode | null = (() => {
-    if (restoreChoice === "restore") return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
+    if (restoreChoice === "restore") {
+      // 임시저장 복원 시 임시저장 당시 모드 우선, 없으면 현재 저장된 모드
+      if (hasTempGrid) return effectiveTempMode ?? savedGridData?.mode ?? GAME_MODE.CHALLENGE;
+      return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
+    }
     if (savedGridData?.wasReset) return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
     if (isResetThreshold && hasSavedGrid) return savedGridData!.mode ?? GAME_MODE.CHALLENGE;
-    if (restoreChoice === "fresh") return modeChoice;
+    if (restoreChoice === "fresh") return modeChoice ?? savedGridData?.mode ?? null;
     if (savedGridData?.mode !== undefined) return savedGridData.mode;
     return modeChoice;
   })();
 
   const shouldRestore = restoreChoice === "restore" || (isResetThreshold && hasSavedGrid);
+
   const waitingForMode =
     effectiveMode === null && !waitingForChoice && !savedGridData?.wasReset;
   const showResetModal = !!(savedGridData?.wasReset && !resetDismissed);
@@ -65,6 +84,7 @@ export function deriveHomeState({
 
   return {
     hasSavedGrid,
+    hasTempGrid,
     waitingForChoice,
     effectiveMode,
     shouldRestore,
