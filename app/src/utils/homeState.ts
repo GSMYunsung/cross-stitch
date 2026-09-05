@@ -16,6 +16,7 @@ export interface HomeStateInput {
 
 export interface HomeStateResult {
   hasSavedGrid: boolean;
+  hasTempGrid: boolean;
   waitingForChoice: boolean;
   effectiveMode: GameMode | null;
   shouldRestore: boolean;
@@ -38,6 +39,8 @@ export function deriveHomeState({
     savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false;
   const hasSavedGrid = isGridLoaded && savedGridData !== null && hasActualStitches;
 
+  const hasTempGrid = !!(savedGridData?.tempGridState?.flat().some((c) => c.isChecked));
+
   const savedCount = savedGridData?.commitCount ?? 0;
   const isResetThreshold =
     savedGridData?.mode !== GAME_MODE.NORMAL &&
@@ -55,7 +58,11 @@ export function deriveHomeState({
     return modeChoice;
   })();
 
-  const shouldRestore = restoreChoice === "restore" || (isResetThreshold && hasSavedGrid);
+  // 임시저장이 있고 완성된 그리드가 없으면 자동으로 임시저장 복원
+  const shouldAutoRestoreTemp = hasTempGrid && !hasSavedGrid && restoreChoice === null;
+  const shouldRestore =
+    restoreChoice === "restore" || (isResetThreshold && hasSavedGrid) || shouldAutoRestoreTemp;
+
   const waitingForMode =
     effectiveMode === null && !waitingForChoice && !savedGridData?.wasReset;
   const showResetModal = !!(savedGridData?.wasReset && !resetDismissed);
@@ -65,6 +72,7 @@ export function deriveHomeState({
 
   return {
     hasSavedGrid,
+    hasTempGrid,
     waitingForChoice,
     effectiveMode,
     shouldRestore,

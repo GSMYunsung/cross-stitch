@@ -14,6 +14,8 @@ interface CheckedCell {
 
 export interface SavedGridData {
   gridState: StitchCell[][];
+  tempGridState?: StitchCell[][];
+  tempCommitCount?: number;
   commitCount: number;
   updatedAt: string;
   firstLoginAt: string;
@@ -79,6 +81,34 @@ export const clearResetFlag = async (userId: string): Promise<void> => {
   await setDoc(docRef, { wasReset: false }, { merge: true });
 };
 
+export const saveTempGrid = async (
+  userId: string,
+  gridState: StitchCell[][],
+  commitCount: number,
+): Promise<void> => {
+  const tempCheckedCells: CheckedCell[] = [];
+  gridState.forEach((row, r) =>
+    row.forEach((cell, c) => {
+      if (cell.isChecked) tempCheckedCells.push({ r, c, color: cell.color });
+    }),
+  );
+  const docRef = doc(db, "grids", userId);
+  await setDoc(
+    docRef,
+    {
+      tempCheckedCells,
+      tempCommitCount: commitCount,
+      tempUpdatedAt: new Date().toISOString(),
+    },
+    { merge: true },
+  );
+};
+
+export const clearTempGrid = async (userId: string): Promise<void> => {
+  const docRef = doc(db, "grids", userId);
+  await setDoc(docRef, { tempCheckedCells: [], tempCommitCount: 0 }, { merge: true });
+};
+
 
 export const loadGrid = async (
   userId: string,
@@ -95,8 +125,20 @@ export const loadGrid = async (
     grid[r][c] = { color, isChecked: true };
   }
 
+  const tempCells = (data.tempCheckedCells ?? []) as CheckedCell[];
+  let tempGridState: StitchCell[][] | undefined;
+  if (tempCells.length > 0) {
+    const tempGrid = makeBlankGrid();
+    for (const { r, c, color } of tempCells) {
+      tempGrid[r][c] = { color, isChecked: true };
+    }
+    tempGridState = tempGrid;
+  }
+
   return {
     gridState: grid,
+    tempGridState,
+    tempCommitCount: data.tempCommitCount ?? undefined,
     commitCount: data.commitCount ?? 0,
     updatedAt: data.updatedAt ?? "",
     firstLoginAt: data.firstLoginAt ?? data.updatedAt ?? "",

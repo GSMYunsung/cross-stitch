@@ -3,7 +3,7 @@
 import CrossTitch from "@/app/src/components/CrossTitch";
 import { useAuth } from "@/app/src/hooks/useAuth";
 import { useFile } from "@/app/src/hooks/useFile";
-import { saveGrid } from "@/app/src/hooks/useGridPersistence";
+import { clearTempGrid, saveGrid, saveTempGrid } from "@/app/src/hooks/useGridPersistence";
 import { useAuthInfo } from "@/app/src/providers/AuthProvider";
 import { useStitch } from "@/app/src/providers/StitchProvider";
 import { CROSSTITCH_DEFAULT_SELECT_COLOR } from "@/app/src/constant";
@@ -128,6 +128,8 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
   const [modal, setModal] = useState(false);
   const [color, setColor] = useColor(CROSSTITCH_DEFAULT_SELECT_COLOR);
   const [isUploading, setIsUploading] = useState(false);
+  const [isTempSaving, setIsTempSaving] = useState(false);
+  const [tempSaved, setTempSaved] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [showColorInputs, setShowColorInputs] = useState(false);
@@ -152,12 +154,27 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
       await Promise.all([
         saveGrid(user.uid, gridState, commitInfo?.total_count ?? 0, mode),
         handleUpload(user.uid).catch(console.error),
+        clearTempGrid(user.uid),
       ]);
       setModal(true);
     } catch (error) {
       console.error("저장 중 오류 발생:", error);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleTempSave = async () => {
+    if (!user?.uid) return;
+    setIsTempSaving(true);
+    try {
+      await saveTempGrid(user.uid, gridState, commitInfo?.total_count ?? 0);
+      setTempSaved(true);
+      setTimeout(() => setTempSaved(false), 2000);
+    } catch (error) {
+      console.error("임시저장 중 오류 발생:", error);
+    } finally {
+      setIsTempSaving(false);
     }
   };
 
@@ -348,6 +365,32 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
               }}
             >
               초기화
+            </button>
+
+            <button
+              onClick={handleTempSave}
+              disabled={isTempSaving || !hasCheckedItem()}
+              className="cursor-pointer font-label px-6 py-2.5 transition-all"
+              style={{
+                background: tempSaved ? "#3B9A3B" : "#FFFFFF",
+                border: `1.5px solid ${tempSaved ? "#3B9A3B" : "#C9971A"}`,
+                color: tempSaved ? "#FFFFFF" : "#C9971A",
+                borderRadius: 2,
+                cursor: isTempSaving || !hasCheckedItem() ? "not-allowed" : "pointer",
+                opacity: !hasCheckedItem() ? 0.5 : 1,
+                transition: "box-shadow 0.1s, transform 0.1s, background 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                if (isTempSaving || !hasCheckedItem() || tempSaved) return;
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "3px 3px 0 #C9971A";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translate(-1px, -1px)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+                (e.currentTarget as HTMLButtonElement).style.transform = "none";
+              }}
+            >
+              {tempSaved ? "저장됨 ✓" : isTempSaving ? "저장 중..." : "임시저장"}
             </button>
 
             <button

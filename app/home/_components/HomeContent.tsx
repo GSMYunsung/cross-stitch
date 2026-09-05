@@ -1,7 +1,7 @@
 "use client";
 
 import BackPressHandler from "@/app/src/components/BackPressHandler";
-import { clearResetFlag } from "@/app/src/hooks/useGridPersistence";
+import { clearResetFlag, saveMode } from "@/app/src/hooks/useGridPersistence";
 import { useAuthInfo } from "@/app/src/providers/AuthProvider";
 import { StitchProvider } from "@/app/src/providers/StitchProvider";
 import { GAME_MODE, GameMode } from "@/app/src/types/crossTitch";
@@ -34,6 +34,7 @@ export default function HomeContent() {
   const handleModeSelect = (mode: GameMode) => {
     updateMode(mode);
     setModeChoice(mode);
+    if (user?.uid) saveMode(user.uid, mode);
   };
 
   const handleModeChange = (newMode: GameMode) => {
@@ -42,6 +43,7 @@ export default function HomeContent() {
     setRestoreChoice("fresh");
     setEditorKey((k) => k + 1);
     setShowModeChange(false);
+    if (user?.uid) saveMode(user.uid, newMode);
   };
 
   const handleRestore = () => {
@@ -56,6 +58,7 @@ export default function HomeContent() {
 
   const {
     hasSavedGrid,
+    hasTempGrid,
     waitingForChoice,
     effectiveMode,
     shouldRestore,
@@ -86,11 +89,21 @@ export default function HomeContent() {
 
   const { adjustedGrid, wasAdjusted } = useMemo(() => {
     if (!savedGridData || !shouldRestore) return { adjustedGrid: undefined, wasAdjusted: false };
+
+    if (hasTempGrid) {
+      const tempGrid = savedGridData.tempGridState!;
+      if (savedGridData.mode === GAME_MODE.NORMAL) return { adjustedGrid: tempGrid, wasAdjusted: false };
+      const tempCommitCount = savedGridData.tempCommitCount ?? 0;
+      const diff = tempCommitCount - currentCount;
+      if (diff <= 0) return { adjustedGrid: tempGrid, wasAdjusted: false };
+      return { adjustedGrid: applyRandomRemoval(tempGrid, diff), wasAdjusted: false };
+    }
+
     if (savedGridData.mode === GAME_MODE.NORMAL) return { adjustedGrid: savedGridData.gridState, wasAdjusted: false };
     const diff = savedGridData.commitCount - currentCount;
     if (diff <= 0) return { adjustedGrid: savedGridData.gridState, wasAdjusted: false };
     return { adjustedGrid: applyRandomRemoval(savedGridData.gridState, diff), wasAdjusted: true };
-  }, [savedGridData, commitInfo, shouldRestore]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [savedGridData, commitInfo, shouldRestore, hasTempGrid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── 로딩 ── */
   if (!isGridLoaded) {
@@ -177,6 +190,11 @@ export default function HomeContent() {
                 day: "numeric",
               })}
             </p>
+            {hasTempGrid && (
+              <p className="font-label text-[9px] mt-1" style={{ color: "#C9971A" }}>
+                임시저장된 작업이 있어요 — 불러오기 시 임시저장 기준으로 복원됩니다
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2 p-4">
