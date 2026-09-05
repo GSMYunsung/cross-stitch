@@ -24,6 +24,7 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
   const [userFileData, setUserFileData] = useState<StitchFileInfo | null>(null);
   const [isImgLoaded, setIsImgLoaded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const cfg = (mode && MODE_MAP[mode]) ?? DEFAULT_MODE_CONFIG;
   const modeData = { commitCount: commitInfo?.total_count ?? 0, checkedCount };
@@ -33,14 +34,12 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
   const monthLabel = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   useEffect(() => {
-    if (isOpen && user) {
-      getAllFilesInfo("images").then((fileData) => {
-        if (fileData) {
-          const myFile = fileData.find((m) => compareWithoutExtension(m.name, user.uid));
-          if (myFile) setUserFileData(myFile);
-        }
-      });
-    }
+    if (!isOpen || !user) return;
+    getAllFilesInfo("images").then((fileData) => {
+      const myFile = fileData?.find((m) => compareWithoutExtension(m.name, user.uid));
+      if (myFile) setUserFileData(myFile);
+      else setLoadFailed(true);
+    }).catch(() => setLoadFailed(true));
   }, [getAllFilesInfo, isOpen, user]);
 
   const handleCopy = () => {
@@ -54,6 +53,7 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
     setUserFileData(null);
     setIsImgLoaded(false);
     setIsCopied(false);
+    setLoadFailed(false);
     onClose();
   };
 
@@ -116,6 +116,38 @@ export const CrossStitchResultModal = ({ isOpen, onClose }: ModalProps) => {
               onClick={handleClose}
               className="font-label text-[10px] px-6 py-2.5 cursor-pointer"
               style={{ border: "1.5px solid #1A1A1A", background: "#FFFFFF", color: "#1A1A1A" }}
+            >
+              CLOSE
+            </button>
+          </div>
+        ) : loadFailed ? (
+          /* 파일 없음 / 로드 실패 안내 */
+          <div className="flex flex-col items-center py-14 px-5 gap-4 text-center">
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: 52,
+                height: 52,
+                background: "#F5EEE6",
+                border: "2px solid #1A1A1A",
+                boxShadow: "3px 3px 0 #C41E3A",
+              }}
+            >
+              <span style={{ fontSize: 24, lineHeight: 1 }}>!</span>
+            </div>
+            <p className="font-pixel mt-2" style={{ color: "#1A1A1A", fontSize: 12 }}>
+              RESULT NOT FOUND
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: "#7A7A7A", maxWidth: 260 }}>
+              결과 이미지를 불러오지 못했어요.<br />
+              저장이 완료된 후 잠시 기다렸다가 다시 시도해 주세요.
+            </p>
+            <button
+              onClick={handleClose}
+              className="mt-2 font-label text-[10px] px-6 py-2.5 cursor-pointer transition-all"
+              style={{ border: "1.5px solid #1A1A1A", background: "#FFFFFF", color: "#1A1A1A" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#F0E9E0"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#FFFFFF"; }}
             >
               CLOSE
             </button>
