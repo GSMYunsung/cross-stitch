@@ -431,6 +431,22 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
               {isUploading ? "저장 중..." : "완성 →"}
             </button>
           </div>
+
+          {hasCompletedGrid && (
+            <button
+              onClick={handleCopyUrl}
+              className="font-label text-[10px] px-6 py-2 cursor-pointer transition-all"
+              style={{
+                border: `1.5px solid ${isUrlCopied ? "#3B9A3B" : "#1A1A1A"}`,
+                background: isUrlCopied ? "#3B9A3B" : "#1A1A1A",
+                color: "#FFFFFF",
+                borderRadius: 2,
+                transition: "background 0.2s, border-color 0.2s",
+              }}
+            >
+              {isUrlCopied ? "✓ COPIED!" : "COPY SHARE URL"}
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 flex-shrink-0 w-[250px] self-start sticky top-4">
@@ -537,20 +553,6 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
             ⇄ 모드 변경
           </button>
 
-          {hasCompletedGrid && (
-            <button
-              onClick={handleCopyUrl}
-              className="w-full py-2.5 font-label text-[10px] cursor-pointer transition-all"
-              style={{
-                border: `1.5px solid ${isUrlCopied ? "#3B9A3B" : "#1A1A1A"}`,
-                background: isUrlCopied ? "#3B9A3B" : "#1A1A1A",
-                color: "#FFFFFF",
-                transition: "background 0.2s, border-color 0.2s",
-              }}
-            >
-              {isUrlCopied ? "✓ COPIED!" : "COPY SHARE URL"}
-            </button>
-          )}
         </div>
       </div>
 
