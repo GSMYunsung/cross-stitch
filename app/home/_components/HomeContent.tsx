@@ -124,7 +124,9 @@ export default function HomeContent() {
 
   /* ── 이전 작업 복원 선택 ── */
   if (waitingForChoice) {
-    const checkedCount = savedGridData!.gridState.flat().filter((c) => c.isChecked).length;
+    const completedCheckedCount = savedGridData!.gridState.flat().filter((c) => c.isChecked).length;
+    const tempCheckedCount = savedGridData!.tempGridState?.flat().filter((c) => c.isChecked).length ?? 0;
+    const checkedCount = hasTempGrid ? tempCheckedCount : completedCheckedCount;
     const savedMode = savedGridData!.mode;
 
     return (
@@ -167,7 +169,28 @@ export default function HomeContent() {
               padding: 2,
             }}
           >
-            {savedImageUrl ? (
+            {hasTempGrid ? (
+              <svg
+                width="100%"
+                viewBox="0 0 20 20"
+                style={{ display: "block", imageRendering: "pixelated" }}
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <rect width="20" height="20" fill="#D5CFC7" />
+                {savedGridData!.tempGridState!.map((row, r) =>
+                  row.map((cell, c) => (
+                    <rect
+                      key={`${r}-${c}`}
+                      x={c + 0.05}
+                      y={r + 0.05}
+                      width={0.9}
+                      height={0.9}
+                      fill={cell.isChecked ? cell.color : "#FDFCFA"}
+                    />
+                  ))
+                )}
+              </svg>
+            ) : savedImageUrl ? (
               <Image src={savedImageUrl} alt="저장된 십자수" width={320} height={320} className="w-full object-contain" />
             ) : (
               <div className="flex flex-col items-center gap-2 py-8">
