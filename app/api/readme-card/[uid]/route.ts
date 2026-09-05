@@ -15,6 +15,13 @@ const DIVIDER_Y = HEADER_H + TOP_H;
 const BAR_X = RIGHT_X + 14;
 const BAR_W = RIGHT_W - 28;
 
+interface GithubStats {
+  publicRepos?: number;
+  followers?: number;
+  prs?: number;
+  issues?: number;
+}
+
 function fmt(v: number | string | undefined): string {
   if (v == null) return "—";
   return typeof v === "number" ? v.toLocaleString("en") : v;
@@ -32,7 +39,7 @@ function generateSVG({
   mode: string | undefined;
   commitCount: number;
   checkedCount: number;
-  githubStats: { publicRepos?: number; followers?: number; prs?: number; issues?: number } | null;
+  githubStats: GithubStats | null;
   monthLabel: string;
 }): string {
   const modeCfg = (mode && MODE_MAP[mode as keyof typeof MODE_MAP]) || DEFAULT_MODE_CONFIG;
@@ -102,7 +109,7 @@ function generateSVG({
 </svg>`;
 }
 
-async function fetchGithubStats(username: string) {
+async function fetchGithubStats(username: string): Promise<GithubStats | null> {
   const headers = {
     Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
     Accept: "application/vnd.github.v3+json",
@@ -143,6 +150,7 @@ export async function GET(
     const commitCount: number = data.commitCount ?? 0;
     const mode: string | undefined = data.mode;
     const githubUsername: string | undefined = data.githubUsername;
+    const cachedGithubStats: GithubStats | undefined = data.githubStats;
 
     const now = new Date();
     const monthLabel = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -158,7 +166,10 @@ export async function GET(
           return null;
         }
       })(),
-      githubUsername ? fetchGithubStats(githubUsername) : Promise.resolve(null),
+      // 월간 크론이 채워둔 캐시를 우선 사용 — 매 카드 조회마다 공유 GITHUB_TOKEN으로
+      // 라이브 호출하면 여러 사용자 요청이 동시에 몰릴 때 레이트 리밋을 같이 소진한다.
+      // 캐시가 없는 경우(크론이 아직 한 번도 안 돈 신규 사용자)에만 라이브로 폴백한다.
+      cachedGithubStats ?? (githubUsername ? fetchGithubStats(githubUsername) : Promise.resolve(null)),
     ]);
 
     const svg = generateSVG({ pixelArtBase64, mode, commitCount, checkedCount, githubStats, monthLabel });
