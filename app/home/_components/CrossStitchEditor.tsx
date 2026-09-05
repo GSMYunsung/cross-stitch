@@ -9,6 +9,7 @@ import { useStitch } from "@/app/src/providers/StitchProvider";
 import { CROSSTITCH_DEFAULT_SELECT_COLOR } from "@/app/src/constant";
 import { GAME_MODE } from "@/app/src/types/crossTitch";
 import { Template, TEMPLATES, templateToGrid } from "@/app/src/data/templates";
+import { generateReadmeMarkdown } from "@/app/src/utils/string";
 import { useEffect, useRef, useState } from "react";
 import { ColorPicker, useColor } from "react-color-palette";
 import "react-color-palette/css";
@@ -113,7 +114,7 @@ interface Props {
 export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeRequest }: Props) {
   const { handleUpload } = useFile();
   const { user } = useAuth();
-  const { commitInfo, effectiveCommitCount: commitLimit } = useAuthInfo();
+  const { commitInfo, effectiveCommitCount: commitLimit, savedGridData } = useAuthInfo();
   const {
     hasCheckedItem,
     updateSelectColor,
@@ -125,11 +126,14 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
     paletteHistory,
   } = useStitch();
 
+  const hasCompletedGrid = savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false;
+
   const [modal, setModal] = useState(false);
   const [color, setColor] = useColor(CROSSTITCH_DEFAULT_SELECT_COLOR);
   const [isUploading, setIsUploading] = useState(false);
   const [isTempSaving, setIsTempSaving] = useState(false);
   const [tempSaved, setTempSaved] = useState(false);
+  const [isUrlCopied, setIsUrlCopied] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [showColorInputs, setShowColorInputs] = useState(false);
@@ -189,6 +193,13 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
     setTemplateError(null);
     setSelectedTemplateId(template.id);
     updateGridSate(templateToGrid(template.cells));
+  };
+
+  const handleCopyUrl = () => {
+    if (!user?.uid) return;
+    navigator.clipboard.writeText(generateReadmeMarkdown(user.uid, window.location.origin));
+    setIsUrlCopied(true);
+    setTimeout(() => setIsUrlCopied(false), 2000);
   };
 
   const canComplete = hasCheckedItem() && !isUploading;
@@ -525,6 +536,21 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
           >
             ⇄ 모드 변경
           </button>
+
+          {hasCompletedGrid && (
+            <button
+              onClick={handleCopyUrl}
+              className="w-full py-2.5 font-label text-[10px] cursor-pointer transition-all"
+              style={{
+                border: `1.5px solid ${isUrlCopied ? "#3B9A3B" : "#1A1A1A"}`,
+                background: isUrlCopied ? "#3B9A3B" : "#1A1A1A",
+                color: "#FFFFFF",
+                transition: "background 0.2s, border-color 0.2s",
+              }}
+            >
+              {isUrlCopied ? "✓ COPIED!" : "COPY SHARE URL"}
+            </button>
+          )}
         </div>
       </div>
 
