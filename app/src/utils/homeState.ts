@@ -54,7 +54,7 @@ export function deriveHomeState({
     if (restoreChoice === "restore") return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
     if (savedGridData?.wasReset) return savedGridData?.mode ?? GAME_MODE.CHALLENGE;
     if (isResetThreshold && hasSavedGrid) return savedGridData!.mode ?? GAME_MODE.CHALLENGE;
-    if (restoreChoice === "fresh") return modeChoice;
+    if (restoreChoice === "fresh") return savedGridData?.mode ?? modeChoice;
     if (savedGridData?.mode !== undefined) return savedGridData.mode;
     return modeChoice;
   })();

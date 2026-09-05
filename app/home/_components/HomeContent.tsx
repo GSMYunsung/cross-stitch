@@ -22,7 +22,11 @@ export default function HomeContent() {
   } = useAuthInfo();
 
   const [restoreChoice, setRestoreChoice] = useState<"restore" | "fresh" | null>(null);
-  const [modeChoice, setModeChoice] = useState<GameMode | null>(null);
+  const [modeChoice, setModeChoice] = useState<GameMode | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem("crossstitch-mode") as GameMode | null;
+    return stored;
+  });
   const [savedImageUrl, setSavedImageUrl] = useState<string | null>(null);
   const [resetDismissed, setResetDismissed] = useState(false);
   const [showModeChange, setShowModeChange] = useState(false);
@@ -34,6 +38,7 @@ export default function HomeContent() {
   const handleModeSelect = (mode: GameMode) => {
     updateMode(mode);
     setModeChoice(mode);
+    localStorage.setItem("crossstitch-mode", mode);
     if (user?.uid) saveMode(user.uid, mode);
   };
 
@@ -43,6 +48,7 @@ export default function HomeContent() {
     setRestoreChoice("fresh");
     setEditorKey((k) => k + 1);
     setShowModeChange(false);
+    localStorage.setItem("crossstitch-mode", newMode);
     if (user?.uid) saveMode(user.uid, newMode);
   };
 
