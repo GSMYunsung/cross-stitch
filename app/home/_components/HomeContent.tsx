@@ -22,39 +22,45 @@ export default function HomeContent() {
   } = useAuthInfo();
 
   const [restoreChoice, setRestoreChoice] = useState<"restore" | "fresh" | null>(null);
-  const [modeChoice, setModeChoice] = useState<GameMode | null>(null);
   const [savedImageUrl, setSavedImageUrl] = useState<string | null>(null);
   const [resetDismissed, setResetDismissed] = useState(false);
   const [showModeChange, setShowModeChange] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
-  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
-  const [isClientReady, setIsClientReady] = useState(false);
-  const [localTempGridState, setLocalTempGridState] = useState<StitchCell[][] | undefined>(undefined);
-  const [localTempCommitCount, setLocalTempCommitCount] = useState(0);
-  const [localTempMode, setLocalTempMode] = useState<GameMode | undefined>(undefined);
 
-  useEffect(() => {
-    setModeChoice(localStorage.getItem("crossstitch-mode") as GameMode | null);
-    setWelcomeDismissed(localStorage.getItem("crossstitch-welcome-seen") === "true");
-    const local = loadLocalTempGrid();
-    if (local) {
-      setLocalTempGridState(local.tempGridState);
-      setLocalTempCommitCount(local.tempCommitCount);
-      setLocalTempMode(local.tempMode);
+  // localStorage를 useState 지연 초기화로 읽어 useEffect 내 setState 규칙 위반 방지
+  // SSR에서는 window 없으므로 기본값 반환, isGridLoaded가 클라이언트 로딩 게이트 역할
+  const [client, setClient] = useState<{
+    modeChoice: GameMode | null;
+    welcomeDismissed: boolean;
+    localTempGridState?: StitchCell[][];
+    localTempCommitCount: number;
+    localTempMode?: GameMode;
+  }>(() => {
+    if (typeof window === "undefined") {
+      return { modeChoice: null, welcomeDismissed: false, localTempCommitCount: 0 };
     }
-    setIsClientReady(true);
-  }, []);
+    const local = loadLocalTempGrid();
+    return {
+      modeChoice: localStorage.getItem("crossstitch-mode") as GameMode | null,
+      welcomeDismissed: localStorage.getItem("crossstitch-welcome-seen") === "true",
+      localTempGridState: local?.tempGridState,
+      localTempCommitCount: local?.tempCommitCount ?? 0,
+      localTempMode: local?.tempMode,
+    };
+  });
+
+  const { modeChoice, welcomeDismissed, localTempGridState, localTempCommitCount, localTempMode } = client;
 
   const handleModeSelect = (mode: GameMode) => {
     updateMode(mode);
-    setModeChoice(mode);
+    setClient((prev) => ({ ...prev, modeChoice: mode }));
     localStorage.setItem("crossstitch-mode", mode);
     if (user?.uid) saveMode(user.uid, mode);
   };
 
   const handleModeChange = (newMode: GameMode) => {
     updateMode(newMode);
-    setModeChoice(newMode);
+    setClient((prev) => ({ ...prev, modeChoice: newMode }));
     setRestoreChoice("fresh");
     setEditorKey((k) => k + 1);
     setShowModeChange(false);
@@ -124,7 +130,7 @@ export default function HomeContent() {
   }, [savedGridData, commitInfo, shouldRestore, hasTempGrid, localTempGridState, localTempCommitCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── 로딩 ── */
-  if (!isGridLoaded || !isClientReady) {
+  if (!isGridLoaded) {
     return (
       <div className="flex flex-1 items-center justify-center" style={{ background: "#F5EEE6" }}>
         <div className="flex flex-col items-center gap-3">
@@ -320,7 +326,7 @@ export default function HomeContent() {
         isOpen={waitingForMode && !hasSavedGrid && !welcomeDismissed}
         onStart={() => {
           localStorage.setItem("crossstitch-welcome-seen", "true");
-          setWelcomeDismissed(true);
+          setClient((prev) => ({ ...prev, welcomeDismissed: true }));
         }}
       />
       <ModeSelectionModal
