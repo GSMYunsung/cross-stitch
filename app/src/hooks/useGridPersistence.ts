@@ -20,7 +20,6 @@ export interface SavedGridData {
   commitCount: number;
   updatedAt: string;
   firstLoginAt: string;
-  githubUsername?: string;
   wasReset?: boolean;
   mode?: GameMode;
 }
@@ -171,7 +170,6 @@ export const loadGrid = async (
     commitCount: data.commitCount ?? 0,
     updatedAt: data.updatedAt ?? "",
     firstLoginAt: data.firstLoginAt ?? data.updatedAt ?? "",
-    githubUsername: data.githubUsername ?? undefined,
     wasReset: data.wasReset ?? false,
     mode: data.mode as GameMode | undefined,
   };
