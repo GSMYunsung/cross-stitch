@@ -2,6 +2,8 @@ import { adminDb, adminStorage } from "@/app/lib/firebase-admin";
 import { DEFAULT_MODE_CONFIG, MODE_MAP } from "@/app/src/config/modes";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 const W = 500;
 const H = 215;
 const HEADER_H = 34;
@@ -165,7 +167,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "image/svg+xml",
-        "Cache-Control": "no-cache",
+        "Cache-Control": "no-store",
       },
     });
   } catch (err) {
