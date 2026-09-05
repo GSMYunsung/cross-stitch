@@ -81,6 +81,8 @@ export const clearResetFlag = async (userId: string): Promise<void> => {
   await setDoc(docRef, { wasReset: false }, { merge: true });
 };
 
+const LS_TEMP_KEY = "crossstitch-tempgrid";
+
 export const saveTempGrid = async (
   userId: string,
   gridState: StitchCell[][],
@@ -102,11 +104,34 @@ export const saveTempGrid = async (
     },
     { merge: true },
   );
+  if (typeof window !== "undefined") {
+    localStorage.setItem(LS_TEMP_KEY, JSON.stringify({ cells: tempCheckedCells, commitCount }));
+  }
 };
 
 export const clearTempGrid = async (userId: string): Promise<void> => {
   const docRef = doc(db, "grids", userId);
   await setDoc(docRef, { tempCheckedCells: [], tempCommitCount: 0 }, { merge: true });
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(LS_TEMP_KEY);
+  }
+};
+
+export const loadLocalTempGrid = (): { tempGridState: StitchCell[][]; tempCommitCount: number } | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LS_TEMP_KEY);
+    if (!raw) return null;
+    const { cells, commitCount } = JSON.parse(raw) as { cells: CheckedCell[]; commitCount: number };
+    if (!cells || cells.length === 0) return null;
+    const grid = makeBlankGrid();
+    for (const { r, c, color } of cells) {
+      grid[r][c] = { color, isChecked: true };
+    }
+    return { tempGridState: grid, tempCommitCount: commitCount };
+  } catch {
+    return null;
+  }
 };
 
 

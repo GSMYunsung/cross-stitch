@@ -1,5 +1,5 @@
 import type { SavedGridData } from "../hooks/useGridPersistence";
-import { GAME_MODE, GameMode } from "../types/crossTitch";
+import { GAME_MODE, GameMode, StitchCell } from "../types/crossTitch";
 import { isDroppedBelowThreshold } from "./gridLogic";
 
 export interface HomeStateInput {
@@ -12,6 +12,8 @@ export interface HomeStateInput {
   /** AuthProvider effectiveCommitCount — 0커밋 빈 상태 화면 표시에 사용 */
   effectiveCommitCount: number;
   resetDismissed: boolean;
+  /** localStorage에 저장된 임시저장 그리드 (Firestore 로드 실패 대비 백업) */
+  localTempGridState?: StitchCell[][];
 }
 
 export interface HomeStateResult {
@@ -34,12 +36,15 @@ export function deriveHomeState({
   currentCommitCount,
   effectiveCommitCount,
   resetDismissed,
+  localTempGridState,
 }: HomeStateInput): HomeStateResult {
   const hasActualStitches =
     savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false;
   const hasSavedGrid = isGridLoaded && savedGridData !== null && hasActualStitches;
 
-  const hasTempGrid = !!(savedGridData?.tempGridState?.flat().some((c) => c.isChecked));
+  const effectiveTempGrid: StitchCell[][] | undefined =
+    savedGridData?.tempGridState ?? localTempGridState;
+  const hasTempGrid = !!(effectiveTempGrid?.flat().some((c) => c.isChecked));
 
   const savedCount = savedGridData?.commitCount ?? 0;
   const isResetThreshold =

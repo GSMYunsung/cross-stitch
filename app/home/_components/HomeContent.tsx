@@ -1,10 +1,10 @@
 "use client";
 
 import BackPressHandler from "@/app/src/components/BackPressHandler";
-import { clearResetFlag, saveMode } from "@/app/src/hooks/useGridPersistence";
+import { clearResetFlag, loadLocalTempGrid, saveMode } from "@/app/src/hooks/useGridPersistence";
 import { useAuthInfo } from "@/app/src/providers/AuthProvider";
 import { StitchProvider } from "@/app/src/providers/StitchProvider";
-import { GAME_MODE, GameMode } from "@/app/src/types/crossTitch";
+import { GAME_MODE, GameMode, StitchCell } from "@/app/src/types/crossTitch";
 import { applyRandomRemovalGrid as applyRandomRemoval } from "@/app/src/utils/gridLogic";
 import { deriveHomeState } from "@/app/src/utils/homeState";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
@@ -29,10 +29,17 @@ export default function HomeContent() {
   const [editorKey, setEditorKey] = useState(0);
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const [isClientReady, setIsClientReady] = useState(false);
+  const [localTempGridState, setLocalTempGridState] = useState<StitchCell[][] | undefined>(undefined);
+  const [localTempCommitCount, setLocalTempCommitCount] = useState(0);
 
   useEffect(() => {
     setModeChoice(localStorage.getItem("crossstitch-mode") as GameMode | null);
     setWelcomeDismissed(localStorage.getItem("crossstitch-welcome-seen") === "true");
+    const local = loadLocalTempGrid();
+    if (local) {
+      setLocalTempGridState(local.tempGridState);
+      setLocalTempCommitCount(local.tempCommitCount);
+    }
     setIsClientReady(true);
   }, []);
 
@@ -80,6 +87,7 @@ export default function HomeContent() {
     currentCommitCount: currentCount,
     effectiveCommitCount,
     resetDismissed,
+    localTempGridState,
   });
 
   const handleResetModalClose = () => {
@@ -97,20 +105,20 @@ export default function HomeContent() {
   const { adjustedGrid, wasAdjusted } = useMemo(() => {
     if (!savedGridData || !shouldRestore) return { adjustedGrid: undefined, wasAdjusted: false };
 
-    if (hasTempGrid) {
-      const tempGrid = savedGridData.tempGridState!;
-      if (savedGridData.mode === GAME_MODE.NORMAL) return { adjustedGrid: tempGrid, wasAdjusted: false };
-      const tempCommitCount = savedGridData.tempCommitCount ?? 0;
-      const diff = tempCommitCount - currentCount;
-      if (diff <= 0) return { adjustedGrid: tempGrid, wasAdjusted: false };
-      return { adjustedGrid: applyRandomRemoval(tempGrid, diff), wasAdjusted: false };
+    const effectiveTempGrid = savedGridData.tempGridState ?? localTempGridState;
+    if (hasTempGrid && effectiveTempGrid) {
+      const effectiveTempCommitCount = savedGridData.tempCommitCount ?? localTempCommitCount;
+      if (savedGridData.mode === GAME_MODE.NORMAL) return { adjustedGrid: effectiveTempGrid, wasAdjusted: false };
+      const diff = effectiveTempCommitCount - currentCount;
+      if (diff <= 0) return { adjustedGrid: effectiveTempGrid, wasAdjusted: false };
+      return { adjustedGrid: applyRandomRemoval(effectiveTempGrid, diff), wasAdjusted: false };
     }
 
     if (savedGridData.mode === GAME_MODE.NORMAL) return { adjustedGrid: savedGridData.gridState, wasAdjusted: false };
     const diff = savedGridData.commitCount - currentCount;
     if (diff <= 0) return { adjustedGrid: savedGridData.gridState, wasAdjusted: false };
     return { adjustedGrid: applyRandomRemoval(savedGridData.gridState, diff), wasAdjusted: true };
-  }, [savedGridData, commitInfo, shouldRestore, hasTempGrid]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [savedGridData, commitInfo, shouldRestore, hasTempGrid, localTempGridState, localTempCommitCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── 로딩 ── */
   if (!isGridLoaded || !isClientReady) {
@@ -131,10 +139,11 @@ export default function HomeContent() {
 
   /* ── 이전 작업 복원 선택 ── */
   if (waitingForChoice) {
-    const completedCheckedCount = savedGridData!.gridState.flat().filter((c) => c.isChecked).length;
-    const tempCheckedCount = savedGridData!.tempGridState?.flat().filter((c) => c.isChecked).length ?? 0;
+    const effectiveTempGrid = savedGridData?.tempGridState ?? localTempGridState;
+    const completedCheckedCount = savedGridData?.gridState.flat().filter((c) => c.isChecked).length ?? 0;
+    const tempCheckedCount = effectiveTempGrid?.flat().filter((c) => c.isChecked).length ?? 0;
     const checkedCount = hasTempGrid ? tempCheckedCount : completedCheckedCount;
-    const savedMode = savedGridData!.mode;
+    const savedMode = savedGridData?.mode;
 
     return (
       <div
@@ -176,7 +185,7 @@ export default function HomeContent() {
               padding: 2,
             }}
           >
-            {hasTempGrid ? (
+            {hasTempGrid && effectiveTempGrid ? (
               <svg
                 width="100%"
                 viewBox="0 0 20 20"
@@ -184,7 +193,7 @@ export default function HomeContent() {
                 preserveAspectRatio="xMidYMid meet"
               >
                 <rect width="20" height="20" fill="#D5CFC7" />
-                {savedGridData!.tempGridState!.map((row, r) =>
+                {effectiveTempGrid.map((row, r) =>
                   row.map((cell, c) => (
                     <rect
                       key={`${r}-${c}`}
@@ -217,7 +226,9 @@ export default function HomeContent() {
               {checkedCount} CELLS FILLED
               {hasTempGrid
                 ? <span style={{ color: "#C9971A" }}> · 임시저장</span>
-                : ` · ${new Date(savedGridData!.updatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" })}`}
+                : savedGridData?.updatedAt
+                  ? ` · ${new Date(savedGridData.updatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" })}`
+                  : ""}
             </p>
           </div>
 
