@@ -126,9 +126,11 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
     paletteHistory,
   } = useStitch();
 
-  const hasCompletedGrid = savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false;
-
   const [modal, setModal] = useState(false);
+  // savedGridData는 마운트 시 1회 로드 — 이번 세션 완성도 즉시 반영하기 위해 로컬 플래그 병용
+  const [hasCompleted, setHasCompleted] = useState(false);
+  const hasCompletedGrid =
+    (savedGridData?.gridState.flat().some((c) => c.isChecked) ?? false) || hasCompleted;
   const [color, setColor] = useColor(CROSSTITCH_DEFAULT_SELECT_COLOR);
   const [isUploading, setIsUploading] = useState(false);
   const [isTempSaving, setIsTempSaving] = useState(false);
@@ -160,6 +162,7 @@ export default function CrossStitchEditor({ wasAdjusted = false, onModeChangeReq
         handleUpload(user.uid).catch(console.error),
         clearTempGrid(user.uid),
       ]);
+      setHasCompleted(true);
       setModal(true);
     } catch (error) {
       console.error("저장 중 오류 발생:", error);
